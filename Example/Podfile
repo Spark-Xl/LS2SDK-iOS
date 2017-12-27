@@ -1,0 +1,15 @@
+use_frameworks!
+platform :ios, '10.0'
+
+target 'LS2SDK_Example' do
+  pod 'LS2SDK/Core', :path => '../'
+  pod 'OMHClient', :path => '~/Developer/ResearchSuite/iOS/OMHClient-ios'
+  pod 'ResearchSuiteExtensions', :path => '~/Developer/ResearchSuite/iOS/ResearchSuiteExtensions'
+
+  target 'LS2SDK_Tests' do
+    inherit! :search_paths
+
+    pod 'Quick', '~> 1.2.0'
+  pod 'Nimble', '~> 7.0.2'
+  end
+end
