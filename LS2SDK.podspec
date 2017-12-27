@@ -46,11 +46,11 @@ TODO: Add long description of the pod here.
 
   s.subspec 'RSTBSupport' do |rstb|
     rstb.source_files = 'Source/RSTBSupport/**/*'
-    rstb.dependency 'OhmageOMHSDK/Core'
-    rstb.dependency 'OhmageOMHSDK/RKSupport'
+    rstb.dependency 'LS2SDK/Core'
+    rstb.dependency 'LS2SDK/RKSupport'
     rstb.dependency 'ResearchSuiteTaskBuilder'
   end
-  
+
   # s.subspec 'RSRPSupport' do |rsrp|
   #   rsrp.source_files = 'Source/RSRPSupport/**/*'
   #   rsrp.dependency 'OhmageOMHSDK/Core'
