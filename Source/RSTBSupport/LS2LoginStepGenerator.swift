@@ -9,7 +9,7 @@ import ResearchSuiteTaskBuilder
 import ResearchKit
 import Gloss
 
-class LS2LoginStepGenerator: RSTBBaseStepGenerator {
+open class LS2LoginStepGenerator: RSTBBaseStepGenerator {
     
     public init(){}
     

@@ -330,6 +330,23 @@ open class LS2Manager: NSObject {
                 
                 self.upload(fromMemory: fromMemory)
                 return
+            
+            //this datapoint is invalid and won't ever be accepted
+            //we can remove it from the queue
+            case .some(LS2ClientError.invalidDatapoint):
+                
+                self.logger?.log("datapoint invalid: removing")
+                
+                do {
+                    try self.secureQueue.removeElement(elementId: elementId)
+                    
+                } catch let error {
+                    //we tried to delete,
+                    debugPrint(error)
+                }
+                
+                self.upload(fromMemory: fromMemory)
+                return
                 
             case .some(LS2ClientError.badGatewayError):
                 self.logger?.log("bad gateway")

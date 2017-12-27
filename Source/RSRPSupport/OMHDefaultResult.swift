@@ -69,31 +69,25 @@ open class OMHDefaultResult: RSRPIntermediateResult, RSRPFrontEndTransformer {
             taskIdentifier: taskIdentifier,
             taskRunUUID: taskRunUUID
         )
-        
     }
-    
 }
 
 extension OMHDefaultResult: OMHDataPointBuilder {
-    
-    open var creationDateTime: Date {
-        return self.startDate ?? Date()
-    }
-    
+
     open var dataPointID: String {
         return self.uuid.uuidString
     }
     
-    open var acquisitionModality: OMHAcquisitionProvenanceModality? {
+    open var acquisitionModality: OMHAcquisitionProvenanceModality {
         return .SelfReported
     }
     
-    open var acquisitionSourceCreationDateTime: Date? {
-        return self.startDate
+    open var acquisitionSourceCreationDateTime: Date {
+        return self.startDate ?? Date()
     }
     
-    open var acquisitionSourceName: String? {
-        return Bundle.main.infoDictionary![kCFBundleNameKey as String] as? String
+    open var acquisitionSourceName: String {
+        return Bundle.main.infoDictionary![kCFBundleNameKey as String] as! String
     }
     
     open var body: [String: Any] {
