@@ -51,12 +51,12 @@ TODO: Add long description of the pod here.
     rstb.dependency 'ResearchSuiteTaskBuilder'
   end
 
-  # s.subspec 'RSRPSupport' do |rsrp|
-  #   rsrp.source_files = 'Source/RSRPSupport/**/*'
-  #   rsrp.dependency 'OhmageOMHSDK/Core'
-  #   rsrp.dependency 'ResearchSuiteResultsProcessor', '~> 0.8'
-  # end
+  s.subspec 'RSRPSupport' do |rsrp|
+    rsrp.source_files = 'Source/RSRPSupport/**/*'
+    rsrp.dependency 'LS2SDK/Core'
+    rsrp.dependency 'ResearchSuiteResultsProcessor', '~> 0.8'
+  end
 
-  s.default_subspec = 'Core'
+  # s.default_subspec = 'Core'
 
 end
