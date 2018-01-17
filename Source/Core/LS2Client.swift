@@ -104,6 +104,68 @@ open class LS2Client: NSObject {
         
     }
     
+    public func signOut(token: String, completion: @escaping ((Bool, Error?) -> ())) {
+        let urlString = "\(self.baseURL)/auth/logout"
+        let headers = ["Authorization": "Token \(token)", "Accept": "application/json"]
+        
+        let request = Alamofire.request(
+            urlString,
+            method: .post,
+            encoding: JSONEncoding.default,
+            headers: headers)
+        
+        let reponseProcessor: (DataResponse<Any>) -> () = self.processLogoutResponse(completion: completion)
+        
+        request.responseJSON(queue: self.dispatchQueue, completionHandler: reponseProcessor)
+        
+    }
+    
+    private func processLogoutResponse(completion: @escaping ((Bool, Error?) -> ())) -> (DataResponse<Any>) -> () {
+        
+        return { jsonResponse in
+            //check for actually success
+            
+            debugPrint(jsonResponse)
+            //check for lower level errors
+            if let error = jsonResponse.result.error as NSError? {
+                if error.code == NSURLErrorNotConnectedToInternet {
+                    completion(false, LS2ClientError.unreachableError(underlyingError: error))
+                    return
+                }
+                else {
+                    completion(false, LS2ClientError.otherError(underlyingError: error))
+                    return
+                }
+            }
+            
+            //check for our errors
+            //credentialsFailure
+            guard let _ = jsonResponse.response else {
+                completion(false, LS2ClientError.malformedResponse(responseBody: jsonResponse))
+                return
+            }
+            
+            if let response = jsonResponse.response,
+                response.statusCode == 502 {
+                debugPrint(jsonResponse)
+                completion(false, LS2ClientError.badGatewayError)
+                return
+            }
+            
+            //check for malformed body
+            guard jsonResponse.result.isSuccess,
+                let response = jsonResponse.response,
+                response.statusCode == 200 else {
+                    completion(false, LS2ClientError.malformedResponse(responseBody: jsonResponse.result.value))
+                    return
+            }
+            
+            completion(true, nil)
+        }
+        
+        
+    }
+
     private func postJSONSample(sampleDict: OMHDataPointDictionary, token: String, completion: @escaping ((Bool, Error?) -> ())) {
         let urlString = "\(self.baseURL)/dataPoints"
         let headers = ["Authorization": "Token \(token)", "Accept": "application/json"]
@@ -121,13 +183,13 @@ open class LS2Client: NSObject {
             encoding: JSONEncoding.default,
             headers: headers)
         
-        let reponseProcessor: (DataResponse<Any>) -> () = self.processJSONResponse(completion: completion)
+        let reponseProcessor: (DataResponse<Any>) -> () = self.processDatapointUploadResponse(completion: completion)
         
         request.responseJSON(queue: self.dispatchQueue, completionHandler: reponseProcessor)
         
     }
     
-    private func processJSONResponse(completion: @escaping ((Bool, Error?) -> ())) -> (DataResponse<Any>) -> () {
+    private func processDatapointUploadResponse(completion: @escaping ((Bool, Error?) -> ())) -> (DataResponse<Any>) -> () {
         
         return { jsonResponse in
             //check for actually success

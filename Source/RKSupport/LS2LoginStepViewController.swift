@@ -16,7 +16,11 @@ open class LS2LoginStepViewController: RSLoginStepViewController {
         
         if let ls2Manager = self.ls2Manager {
             
-            ls2Manager.signIn(username: username, password: password) { (error) in
+            self.isLoading = true
+            
+            ls2Manager.signIn(username: username, password: password, forceSignIn: true) { (error) in
+                
+                self.isLoading = false
                 
                 debugPrint(error)
                 if error == nil {

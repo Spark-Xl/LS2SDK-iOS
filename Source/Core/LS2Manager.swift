@@ -110,9 +110,9 @@ open class LS2Manager: NSObject {
         NotificationCenter.default.removeObserver(self.protectedDataAvaialbleObserver)
     }
     
-    public func signIn(username: String, password: String, completion: @escaping ((Error?) -> ())) {
+    public func signIn(username: String, password: String, forceSignIn:Bool = false, completion: @escaping ((Error?) -> ())) {
         
-        if self.isSignedIn {
+        if self.isSignedIn && forceSignIn == false {
             completion(LS2ManagerErrors.alreadySignedIn)
             return
         }
@@ -139,24 +139,36 @@ open class LS2Manager: NSObject {
     }
     
     public func signOut(completion: @escaping ((Error?) -> ())) {
-        do {
-            
-            self.reachabilityManager.stopListening()
-            
-            try self.secureQueue.clear()
-            self.clearCredentials()
-            
-            completion(nil)
-            
-        } catch let error {
-            completion(error)
+        
+//        self.client
+        
+        let onFinishClosure = {
+            do {
+                
+                self.reachabilityManager.stopListening()
+                
+                try self.secureQueue.clear()
+                self.clearCredentials()
+                
+                completion(nil)
+                
+            } catch let error {
+                completion(error)
+            }
         }
+        
+        guard let authToken = self.getAuthToken() else {
+            onFinishClosure()
+            return
+        }
+        
+        self.client.signOut(token: authToken, completion: { (success, error) in
+            onFinishClosure()
+        })
     }
     
     public var isSignedIn: Bool {
-        return self.credentialsQueue.sync {
-            return self.authToken != nil
-        }
+        return self.getAuthToken() != nil
     }
     
     public var queueIsEmpty: Bool {
@@ -184,6 +196,12 @@ open class LS2Manager: NSObject {
             }
             self.authToken = authToken
             return
+        }
+    }
+    
+    private func getAuthToken() -> String? {
+        return self.credentialsQueue.sync {
+            return self.authToken
         }
     }
     
