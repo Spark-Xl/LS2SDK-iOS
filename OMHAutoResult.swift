@@ -89,7 +89,7 @@ open class OMHAutoResult: RSRPIntermediateResult, RSRPFrontEndTransformer {
             return nil
         }
         
-        let defaultResult = OMHDefaultResult(
+        let defaultResult = OMHAutoResult(
             uuid: UUID(),
             taskIdentifier: taskIdentifier,
             taskRunUUID: taskRunUUID,
