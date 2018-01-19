@@ -141,7 +141,7 @@ extension OMHAutoResult: OMHDataPointBuilder {
     }
     
     open var acquisitionSourceName: String {
-        return Bundle.main.infoDictionary![kCFBundleNameKey as String] as! String
+        return OMHDefaultResult.defaultAcquisitionSourceName
     }
     
     open var body: [String: Any] {

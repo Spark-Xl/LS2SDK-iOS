@@ -8,6 +8,7 @@
 import UIKit
 import ResearchSuiteResultsProcessor
 import OMHClient
+import Alamofire
 
 open class OMHDefaultResult: RSRPIntermediateResult, RSRPFrontEndTransformer {
     
@@ -17,6 +18,43 @@ open class OMHDefaultResult: RSRPIntermediateResult, RSRPFrontEndTransformer {
     
     public static func supportsType(type: String) -> Bool {
         return self.supportedTypes.contains(type)
+    }
+    
+    public static var defaultAcquisitionSourceName: String {
+        if let info = Bundle.main.infoDictionary {
+            let executable = info[kCFBundleExecutableKey as String] as? String ?? "Unknown"
+            let bundle = info[kCFBundleIdentifierKey as String] as? String ?? "Unknown"
+            let appVersion = info["CFBundleShortVersionString"] as? String ?? "Unknown"
+            let appBuild = info[kCFBundleVersionKey as String] as? String ?? "Unknown"
+            
+            let osNameVersion: String = {
+                let version = ProcessInfo.processInfo.operatingSystemVersion
+                let versionString = "\(version.majorVersion).\(version.minorVersion).\(version.patchVersion)"
+                
+                let osName: String = {
+                    #if os(iOS)
+                        return "iOS"
+                    #elseif os(watchOS)
+                        return "watchOS"
+                    #elseif os(tvOS)
+                        return "tvOS"
+                    #elseif os(macOS)
+                        return "OS X"
+                    #elseif os(Linux)
+                        return "Linux"
+                    #else
+                        return "Unknown"
+                    #endif
+                }()
+                
+                return "\(osName) \(versionString)"
+            }()
+            
+            return "\(executable)/\(appVersion) (\(bundle); build:\(appBuild); \(osNameVersion))"
+        }
+        else {
+            return "Unknown"
+        }
     }
     
     public class func transform(taskIdentifier: String, taskRunUUID: UUID, parameters: [String : AnyObject]) -> RSRPIntermediateResult? {
@@ -87,7 +125,7 @@ extension OMHDefaultResult: OMHDataPointBuilder {
     }
     
     open var acquisitionSourceName: String {
-        return Bundle.main.infoDictionary![kCFBundleNameKey as String] as! String
+        return OMHDefaultResult.defaultAcquisitionSourceName
     }
     
     open var body: [String: Any] {
