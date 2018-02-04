@@ -19,6 +19,12 @@ public protocol LS2Logger {
     func log(_ debugString: String)
 }
 
+public protocol LS2ManagerDelegate: class {
+    
+    func onInvalidToken(manager: LS2Manager) -> Bool
+    
+}
+
 open class LS2Manager: NSObject {
     
     static let kAuthToken = "AuthToken"
@@ -39,6 +45,7 @@ open class LS2Manager: NSObject {
     var protectedDataAvaialbleObserver: NSObjectProtocol!
     
     var logger: LS2Logger?
+    public weak var delegate: LS2ManagerDelegate?
     
     public init?(
         baseURL: String,
@@ -134,6 +141,46 @@ open class LS2Manager: NSObject {
             self.reachabilityManager.startListening()
             completion(nil)
             
+        }
+        
+    }
+    
+    //nil Bool value here means that the check is inconclusive
+    public func checkTokenIsValid(completion: @escaping ((Bool?, Error?) -> ())) {
+        if !self.isSignedIn {
+            completion(nil, LS2ManagerErrors.notSignedIn)
+        }
+        
+        self.uploadQueue.async {
+            if let token = self.authToken {
+                self.client.checkTokenIsValid(token: token, completion: { (valid, error) in
+                    
+                    DispatchQueue.main.async {
+                        //there was a conclusive answer that the token is invalid
+                        if let isValid = valid,
+                            !isValid {
+                            
+                            if let delegate = self.delegate {
+                                let shouldLogOut = delegate.onInvalidToken(manager: self)
+                                if shouldLogOut { self.signOut(completion: { (error) in }) }
+                            }
+                            else {
+                                self.logger?.log("invalid access token: clearing")
+                                self.signOut(completion: { (error) in })
+                            }
+                            
+                        }
+                        
+                        completion(valid, error)
+                    }
+                    
+                })
+            }
+            else {
+                DispatchQueue.main.async {
+                    completion(nil, LS2ManagerErrors.notSignedIn)
+                }
+            }
         }
         
     }
@@ -328,8 +375,17 @@ open class LS2Manager: NSObject {
             switch error {
             case .some(LS2ClientError.invalidAuthToken):
                 
-                self.logger?.log("invalid access token: clearing")
-                self.signOut(completion: { (error) in })
+                // Check for delegate and allow it to try to handle invalid token
+                // if onInvalidToken returns true, go through signOut
+                // If delegate does not exist (i.e., default), go through sign out
+                if let delegate = self.delegate {
+                    let shouldLogOut = delegate.onInvalidToken(manager: self)
+                    if shouldLogOut { self.signOut(completion: { (error) in }) }
+                }
+                else {
+                    self.logger?.log("invalid access token: clearing")
+                    self.signOut(completion: { (error) in })
+                }
                 
                 return
             //we've already tried to upload this data point

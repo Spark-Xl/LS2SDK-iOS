@@ -88,6 +88,84 @@ open class LS2Client: NSObject {
         
     }
     
+    //nil Bool value here means the validity check is inconclusive
+    open func checkTokenIsValid(token: String, completion: @escaping ((Bool?, Error?) -> ())) {
+        let urlString = "\(self.baseURL)/auth/token/check"
+        let headers = ["Authorization": "Token \(token)", "Accept": "application/json"]
+        
+        let request = Alamofire.request(
+            urlString,
+            method: .get,
+            encoding: JSONEncoding.default,
+            headers: headers)
+        
+        request.responseJSON(queue: self.dispatchQueue, completionHandler: self.processTokenValidationResponse(completion: completion))
+    }
+    
+    private func processTokenValidationResponse(completion: @escaping ((Bool?, Error?) -> ())) -> (DataResponse<Any>) -> () {
+        
+        return { jsonResponse in
+            //check for actually success
+            
+            debugPrint(jsonResponse)
+            
+            switch jsonResponse.result {
+            case .success:
+                print("Validation Successful")
+                guard let response = jsonResponse.response else {
+                    completion(false, LS2ClientError.unknownError)
+                    return
+                }
+                
+                switch (response.statusCode) {
+                case 200:
+                    completion(true, nil)
+                    return
+                    
+                case 401:
+                    completion(false, LS2ClientError.invalidAuthToken)
+                    return
+                    
+                case 500:
+                    completion(nil, LS2ClientError.serverError)
+                    return
+                    
+                case 502:
+                    completion(nil, LS2ClientError.badGatewayError)
+                    return
+                    
+                default:
+                    
+                    if let error = jsonResponse.result.error {
+                        completion(nil, error)
+                        return
+                    }
+                    else {
+                        completion(nil, LS2ClientError.malformedResponse(responseBody: jsonResponse))
+                        return
+                    }
+                    
+                }
+                
+                
+            case .failure(let error):
+                let nsError = error as NSError
+                if nsError.code == NSURLErrorNotConnectedToInternet {
+                    completion(nil, LS2ClientError.unreachableError(underlyingError: nsError))
+                    return
+                }
+                else {
+                    completion(nil, LS2ClientError.otherError(underlyingError: nsError))
+                    return
+                }
+            }
+        }
+        
+        
+    }
+    
+    
+    
     open func validateSample(sample: OMHDataPoint) -> Bool {
         
         let sampleDict = sample.toDict()
