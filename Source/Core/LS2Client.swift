@@ -17,10 +17,17 @@ open class LS2Client: NSObject {
     
     let baseURL: String
     let dispatchQueue: DispatchQueue?
+    let sessionManager: SessionManager
     
-    public init(baseURL: String, dispatchQueue: DispatchQueue? = nil) {
+    public init(baseURL: String, dispatchQueue: DispatchQueue? = nil, serverTrustPolicyManager: ServerTrustPolicyManager? = nil) {
         self.baseURL = baseURL
         self.dispatchQueue = dispatchQueue
+        
+        let configuration = URLSessionConfiguration.default
+        configuration.httpAdditionalHeaders = SessionManager.defaultHTTPHeaders
+        
+        self.sessionManager = SessionManager(configuration: configuration, serverTrustPolicyManager: serverTrustPolicyManager)
+        
         super.init()
     }
     
@@ -78,7 +85,7 @@ open class LS2Client: NSObject {
             "password": password
         ]
         
-        let request = Alamofire.request(
+        let request = self.sessionManager.request(
             urlString,
             method: .post,
             parameters: parameters,
@@ -93,7 +100,7 @@ open class LS2Client: NSObject {
         let urlString = "\(self.baseURL)/auth/token/check"
         let headers = ["Authorization": "Token \(token)", "Accept": "application/json"]
         
-        let request = Alamofire.request(
+        let request = self.sessionManager.request(
             urlString,
             method: .get,
             encoding: JSONEncoding.default,
@@ -186,7 +193,7 @@ open class LS2Client: NSObject {
         let urlString = "\(self.baseURL)/auth/logout"
         let headers = ["Authorization": "Token \(token)", "Accept": "application/json"]
         
-        let request = Alamofire.request(
+        let request = self.sessionManager.request(
             urlString,
             method: .post,
             encoding: JSONEncoding.default,
@@ -254,7 +261,7 @@ open class LS2Client: NSObject {
             return
         }
         
-        let request = Alamofire.request(
+        let request = self.sessionManager.request(
             urlString,
             method: .post,
             parameters: params,

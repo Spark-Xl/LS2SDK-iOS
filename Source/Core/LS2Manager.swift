@@ -51,12 +51,13 @@ open class LS2Manager: NSObject {
         baseURL: String,
         queueStorageDirectory: String,
         store: LS2CredentialStore,
-        logger: LS2Logger? = nil
+        logger: LS2Logger? = nil,
+        serverTrustPolicyManager: ServerTrustPolicyManager? = nil
         ) {
         
         self.uploadQueue = DispatchQueue(label: "UploadQueue")
         
-        self.client = LS2Client(baseURL: baseURL, dispatchQueue: self.uploadQueue)
+        self.client = LS2Client(baseURL: baseURL, dispatchQueue: self.uploadQueue, serverTrustPolicyManager: serverTrustPolicyManager)
         self.secureQueue = SecureQueue(directoryName: queueStorageDirectory, allowedClasses: [NSDictionary.self, NSArray.self])
         
         self.credentialsQueue = DispatchQueue(label: "CredentialsQueue")
