@@ -22,20 +22,28 @@ public protocol LS2Logger {
 public protocol LS2ManagerDelegate: class {
     
     func onInvalidToken(manager: LS2Manager) -> Bool
+    func onSignIn(manager: LS2Manager)
+    func onSignOut(manager: LS2Manager)
     
 }
 
 open class LS2Manager: NSObject {
     
     static let kAuthToken = "AuthToken"
+    static let kPublicKeyID = "PublicKeyID"
     
     var client: LS2Client!
     var secureQueue: SecureQueue!
+    var clientConfig: LS2ClientConfiguration?
     
     var credentialsQueue: DispatchQueue!
     var credentialStore: LS2CredentialStore!
     var credentialStoreQueue: DispatchQueue!
+    
     var authToken: String?
+
+    var publicKeyID: String?
+    var publicKey: String?
     
     var uploadQueue: DispatchQueue!
     var isUploading: Bool = false
@@ -80,6 +88,11 @@ open class LS2Manager: NSObject {
         self.logger = logger
         
         super.init()
+        
+        if let (publicKeyID, publicKey) = self.loadPublicKey() {
+            self.publicKeyID = publicKeyID
+            self.publicKey = publicKey
+        }
         
         //set up listeners for the following events:
         // 1) we have access to the internet
@@ -140,6 +153,7 @@ open class LS2Manager: NSObject {
             }
             
             self.reachabilityManager.startListening()
+            self.delegate?.onSignIn(manager: self)
             completion(nil)
             
         }
@@ -186,6 +200,163 @@ open class LS2Manager: NSObject {
         
     }
     
+    private func readPublicKeyFromFile(publicKeyID: String) -> String? {
+        guard let documentsPathString = NSSearchPathForDirectoriesInDomains(FileManager.SearchPathDirectory.documentDirectory, FileManager.SearchPathDomainMask.userDomainMask, true).first else {
+            return nil
+        }
+        
+        let documentsPath: URL = URL(fileURLWithPath: documentsPathString)
+        let publicKeyURL: URL = documentsPath.appendingPathComponent("\(publicKeyID).pem")
+        do {
+            return try String(contentsOf: publicKeyURL, encoding: .utf8)
+        } catch let error as NSError {
+            print(error.localizedDescription)
+            return nil
+        }
+    }
+    
+    //This should probably throw an error if fails
+    private func writePublicKeyToFile(publicKeyID: String, publicKey: String) {
+        guard let documentsPathString = NSSearchPathForDirectoriesInDomains(FileManager.SearchPathDirectory.documentDirectory, FileManager.SearchPathDomainMask.userDomainMask, true).first else {
+            return
+        }
+        
+        let documentsPath: URL = URL(fileURLWithPath: documentsPathString)
+        let publicKeyURL: URL = documentsPath.appendingPathComponent("\(publicKeyID).pem")
+        guard let publicKeyData: Data = publicKey.data(using: .utf8) else {
+            return
+        }
+        
+        do {
+            try publicKeyData.write(to: publicKeyURL, options: [Data.WritingOptions.completeFileProtectionUntilFirstUserAuthentication, Data.WritingOptions.atomic])
+        } catch let error as NSError {
+            print(error.localizedDescription)
+            return
+        }
+        
+        debugPrint("Wrote public key to \(publicKeyURL.absoluteString)")
+    }
+    
+    private func loadPublicKey() -> (String, String)? {
+        
+        return self.credentialsQueue.sync {
+            guard let publicKeyID = self.credentialStore.get(key: LS2Manager.kPublicKeyID) as? String,
+                let publicKey = self.readPublicKeyFromFile(publicKeyID: publicKeyID) else {
+                    return nil
+            }
+            
+            return (publicKeyID, publicKey)
+        }
+    }
+    
+    private func savePublicKey(publicKeyID: String, publicKey: String) {
+        
+        self.credentialsQueue.sync {
+            self.writePublicKeyToFile(publicKeyID: publicKeyID, publicKey: publicKey)
+            self.credentialStore.set(value: publicKeyID as NSString, key: LS2Manager.kPublicKeyID)
+        }
+        
+    }
+    
+    private func clearPublicKey(publicKeyID: String) {
+        
+        self.credentialsQueue.sync {
+            self.credentialStore.set(value: nil, key: LS2Manager.kPublicKeyID)
+        }
+        
+    }
+    
+    public func checkPublicKey(completion: @escaping ((Bool?, Error?) -> ())) {
+        if !self.isSignedIn {
+            completion(nil, LS2ManagerErrors.notSignedIn)
+        }
+        
+        self.uploadQueue.async {
+            if let token = self.authToken {
+                
+                self.client.getClientConfiguration(token: token, completion: { (clientConfig, error) in
+                    
+                    guard let config = clientConfig else {
+                        completion(nil, error)
+                        return
+                    }
+                    
+                    self.clientConfig = config
+                    
+                    let getPublicKey: (String) -> () = { publicKeyID in
+                        self.client.getPublicKey(token: token, publicKeyID: publicKeyID, completion: { (publicKeyStruct, error) in
+                            
+                            if let publicKeyStruct = publicKeyStruct {
+                                //check that public key IDs match
+                                //this is an error if this happend!
+                                assert(publicKeyID == publicKeyStruct.publicKeyID)
+                                self.savePublicKey(publicKeyID: publicKeyStruct.publicKeyID, publicKey: publicKeyStruct.publicKey)
+                                self.publicKey = publicKeyStruct.publicKeyID
+                                self.publicKeyID = publicKeyStruct.publicKeyID
+                                DispatchQueue.main.async {
+                                    completion(true, nil)
+                                }
+                                
+                            }
+                            else {
+                                DispatchQueue.main.async {
+                                    completion(nil, error)
+                                }
+                            }
+                        })
+                    }
+                    
+                    //check to see if public key id matches what we have locally
+                    
+                    if let currentPublicKeyID = self.publicKeyID {
+                        
+                        if let publicKeyID = config.publicKeyID {
+                            
+                            //download and update public key
+                            if publicKeyID != currentPublicKeyID {
+                                getPublicKey(publicKeyID)
+                            }
+                            else {
+                                //if we are here, everything is already up to date
+                                DispatchQueue.main.async {
+                                    completion(false, nil)
+                                }
+                            }
+                        }
+                        else {
+                            //if we are here, it looks like we no longer have a public key for the study
+                            self.clearPublicKey()
+                            DispatchQueue.main.async {
+                                completion(true, nil)
+                            }
+                        }
+                        
+                    }
+                    else {
+                        //we don't yet have a public key
+                        //try to load it from the server
+                        if let publicKeyID = config.publicKeyID {
+                            getPublicKey(publicKeyID)
+                        }
+                        else {
+                            DispatchQueue.main.async {
+                                completion(false, nil)
+                            }
+                            return
+                        }
+                    }
+                    
+                })
+            }
+            else {
+                DispatchQueue.main.async {
+                    completion(nil, LS2ManagerErrors.notSignedIn)
+                }
+            }
+        }
+        
+    }
+    
     public func signOut(completion: @escaping ((Error?) -> ())) {
         
 //        self.client
@@ -197,7 +368,7 @@ open class LS2Manager: NSObject {
                 
                 try self.secureQueue.clear()
                 self.clearCredentials()
-                
+                self.delegate?.onSignOut(manager: self)
                 completion(nil)
                 
             } catch let error {
@@ -225,6 +396,17 @@ open class LS2Manager: NSObject {
     
     public var queueItemCount: Int {
         return self.secureQueue.count
+    }
+    
+    private func clearPublicKey() {
+        self.credentialsQueue.sync {
+            self.credentialStoreQueue.async {
+                self.credentialStore.set(value: nil, key: LS2Manager.kPublicKeyID)
+            }
+            self.publicKey = nil
+            self.publicKeyID = nil
+            return
+        }
     }
     
     private func clearCredentials() {

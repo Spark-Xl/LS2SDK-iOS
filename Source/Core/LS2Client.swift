@@ -9,6 +9,16 @@ import UIKit
 import Alamofire
 import OMHClient
 
+public struct LS2ClientConfiguration {
+    let publicKeyID: String?
+    let encryptByDefault: Bool
+}
+
+public struct LS2PublicKey {
+    let publicKeyID: String
+    let publicKey: String
+}
+
 open class LS2Client: NSObject {
     
     public struct SignInResponse {
@@ -171,7 +181,165 @@ open class LS2Client: NSObject {
         
     }
     
+    open func getPublicKey(token: String, publicKeyID: String, completion: @escaping ((LS2PublicKey?, Error?) -> ())) {
+        let urlString = "\(self.baseURL)/public_keys/\(publicKeyID)"
+        let headers = ["Authorization": "Token \(token)", "Accept": "application/json"]
+        
+        let request = self.sessionManager.request(
+            urlString,
+            method: .get,
+            encoding: JSONEncoding.default,
+            headers: headers)
+        
+        request.responseJSON(queue: self.dispatchQueue, completionHandler: self.processPublicKeyResponse(completion: completion))
+    }
     
+    private func processPublicKeyResponse(completion: @escaping ((LS2PublicKey?, Error?) -> ())) -> (DataResponse<Any>) -> () {
+        
+        return { jsonResponse in
+            //check for actually success
+            
+            debugPrint(jsonResponse)
+            
+            switch jsonResponse.result {
+            case .success:
+                print("Validation Successful")
+                guard let response = jsonResponse.response else {
+                    completion(nil, LS2ClientError.unknownError)
+                    return
+                }
+                
+                switch (response.statusCode) {
+                case 200:
+                    guard jsonResponse.result.isSuccess,
+                        let json = jsonResponse.result.value as? [String: Any],
+                        let publicKeyID = json["uuid"] as? String,
+                        let publicKey = json["contents"] as? String else {
+                            completion(nil, LS2ClientError.malformedResponse(responseBody: jsonResponse.result.value))
+                            return
+                    }
+                    
+                    let publicKeyStruct = LS2PublicKey(publicKeyID: publicKeyID, publicKey: publicKey)
+                    completion(publicKeyStruct, nil)
+                    return
+                    
+                case 500:
+                    completion(nil, LS2ClientError.serverError)
+                    return
+                    
+                case 502:
+                    completion(nil, LS2ClientError.badGatewayError)
+                    return
+                    
+                default:
+                    
+                    if let error = jsonResponse.result.error {
+                        completion(nil, error)
+                        return
+                    }
+                    else {
+                        completion(nil, LS2ClientError.malformedResponse(responseBody: jsonResponse))
+                        return
+                    }
+                    
+                }
+                
+                
+            case .failure(let error):
+                let nsError = error as NSError
+                if nsError.code == NSURLErrorNotConnectedToInternet {
+                    completion(nil, LS2ClientError.unreachableError(underlyingError: nsError))
+                    return
+                }
+                else {
+                    completion(nil, LS2ClientError.otherError(underlyingError: nsError))
+                    return
+                }
+            }
+        }
+        
+        
+    }
+    
+    //nil Bool value here means the validity check is inconclusive
+    open func getClientConfiguration(token: String, completion: @escaping ((LS2ClientConfiguration?, Error?) -> ())) {
+        let urlString = "\(self.baseURL)/study/configuration"
+        let headers = ["Authorization": "Token \(token)", "Accept": "application/json"]
+        
+        let request = self.sessionManager.request(
+            urlString,
+            method: .get,
+            encoding: JSONEncoding.default,
+            headers: headers)
+        
+        request.responseJSON(queue: self.dispatchQueue, completionHandler: self.processClientConfigurationResponse(completion: completion))
+    }
+    
+    private func processClientConfigurationResponse(completion: @escaping ((LS2ClientConfiguration?, Error?) -> ())) -> (DataResponse<Any>) -> () {
+        
+        return { jsonResponse in
+            //check for actually success
+            
+            debugPrint(jsonResponse)
+            
+            switch jsonResponse.result {
+            case .success:
+                print("Validation Successful")
+                guard let response = jsonResponse.response else {
+                    completion(nil, LS2ClientError.unknownError)
+                    return
+                }
+                
+                switch (response.statusCode) {
+                case 200:
+                    guard jsonResponse.result.isSuccess,
+                        let json = jsonResponse.result.value as? [String: Any],
+                         let encryptByDefaultNumber = json["encrypt_by_default"] as? NSNumber else {
+                            completion(nil, LS2ClientError.malformedResponse(responseBody: jsonResponse.result.value))
+                            return
+                    }
+                    let publicKeyID = json["public_key_info"] as? String
+                    let clientConfiguration = LS2ClientConfiguration(publicKeyID: publicKeyID, encryptByDefault: encryptByDefaultNumber.boolValue)
+                    completion(clientConfiguration, nil)
+                    return
+                      
+                case 500:
+                    completion(nil, LS2ClientError.serverError)
+                    return
+                    
+                case 502:
+                    completion(nil, LS2ClientError.badGatewayError)
+                    return
+                    
+                default:
+                    
+                    if let error = jsonResponse.result.error {
+                        completion(nil, error)
+                        return
+                    }
+                    else {
+                        completion(nil, LS2ClientError.malformedResponse(responseBody: jsonResponse))
+                        return
+                    }
+                    
+                }
+                
+                
+            case .failure(let error):
+                let nsError = error as NSError
+                if nsError.code == NSURLErrorNotConnectedToInternet {
+                    completion(nil, LS2ClientError.unreachableError(underlyingError: nsError))
+                    return
+                }
+                else {
+                    completion(nil, LS2ClientError.otherError(underlyingError: nsError))
+                    return
+                }
+            }
+        }
+        
+        
+    }
     
     open func validateSample(sample: OMHDataPoint) -> Bool {
         
