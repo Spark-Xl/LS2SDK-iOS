@@ -36,6 +36,7 @@ TODO: Add long description of the pod here.
     core.dependency 'SecureQueue'
     core.dependency 'Alamofire', '~> 4'
     core.dependency 'CryptoSwift'
+    core.dependency 'SwiftyRSA'
     core.dependency 'GZIP', '~> 1.2'
   end
 

@@ -435,7 +435,7 @@ open class LS2Manager: NSObject {
         }
     }
     
-    public func addDatapoint(datapoint: OMHDataPoint, completion: @escaping ((Error?) -> ())) {
+    public func encryptAndAddDatapoint(datapoint: OMHDataPoint, shouldEncrypt: Bool, completion: @escaping ((Error?) -> ())) {
         
         if !self.isSignedIn {
             completion(LS2ManagerErrors.notSignedIn)
@@ -467,6 +467,10 @@ open class LS2Manager: NSObject {
         self.upload(fromMemory: false)
         completion(nil)
         
+    }
+    
+    public func addDatapoint(datapoint: OMHDataPoint, completion: @escaping ((Error?) -> ())) {
+        self.encryptAndAddDatapoint(datapoint: datapoint, shouldEncrypt: false, completion: completion)
     }
     
     public func startUploading() throws {
@@ -506,6 +510,8 @@ open class LS2Manager: NSObject {
                     let datapoint = dataPointDict["datapoint"] as? [String: Any],
                     let token = self.authToken {
                     
+                    let isEncrypted: Bool = dataPointDict["encrypted"] as? Bool ?? false
+                    
                     assert(dataPointDict["mediaAttachments"] == nil, "Media attachments are not yet supported")
 //                    let mediaAttachments: [OMHMediaAttachment]? = dataPointDict["mediaAttachments"] as? [OMHMediaAttachment]
 //                    let mediaAttachmentUploadSuccess = self.onMediaAttachmentUploaded
@@ -518,7 +524,7 @@ open class LS2Manager: NSObject {
                         self.logger?.log("posting datapoint with id: \(datapointId)")
                     }
                     
-                    self.client.postSample(sampleDict: datapoint, token: token, completion: { (success, error) in
+                    self.client.postSample(sampleDict: datapoint, token: token, encrypted: isEncrypted, completion: { (success, error) in
                         
                         self.isUploading = false
                         self.processUploadResponse(elementId: elementId, fromMemory: fromMemory, success: success, error: error)
@@ -639,7 +645,5 @@ open class LS2Manager: NSObject {
         }
         
     }
-    
-    
 
 }

@@ -351,9 +351,10 @@ open class LS2Client: NSObject {
     open func postSample(
         sampleDict: OMHDataPointDictionary,
         token: String,
+        encrypted: Bool,
         completion: @escaping ((Bool, Error?) -> ())) {
         
-        self.postJSONSample(sampleDict: sampleDict, token: token, completion: completion)
+        self.postJSONSample(sampleDict: sampleDict, token: token, encrypted: encrypted, completion: completion)
         
     }
     
@@ -419,7 +420,7 @@ open class LS2Client: NSObject {
         
     }
 
-    private func postJSONSample(sampleDict: OMHDataPointDictionary, token: String, completion: @escaping ((Bool, Error?) -> ())) {
+    private func postJSONSample(sampleDict: OMHDataPointDictionary, token: String, encrypted: Bool, completion: @escaping ((Bool, Error?) -> ())) {
         let urlString = "\(self.baseURL)/dataPoints"
         let headers = ["Authorization": "Token \(token)", "Accept": "application/json"]
         let params = sampleDict
