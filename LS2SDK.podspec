@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'LS2SDK'
-  s.version          = '0.4.0'
+  s.version          = '0.5.0'
   s.summary          = 'A short description of LS2SDK.'
 
 # This description is used to generate tags and improve search results.
@@ -32,7 +32,7 @@ TODO: Add long description of the pod here.
 
   s.subspec 'Core' do |core|
     core.source_files = 'Source/Core/**/*'
-    core.dependency 'OMHClient', '~> 0.1'
+    core.dependency 'OMHClient', '~> 0.3'
     core.dependency 'SecureQueue'
     core.dependency 'Alamofire', '~> 4'
   end

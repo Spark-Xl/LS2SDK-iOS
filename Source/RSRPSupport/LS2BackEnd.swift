@@ -24,7 +24,16 @@ open class LS2BackEnd: RSRPBackEnd {
     open func add(intermediateResult: RSRPIntermediateResult) {
 
         for transformer in self.transformers {
-            if let datapoint: OMHDataPoint = transformer.transform(intermediateResult: intermediateResult) {
+            let additionalMetadata: [String: Any]? = {
+                if let closure = self.getAdditionalMetadata {
+                    return closure()
+                }
+                else {
+                    return nil
+                }
+            }()
+            
+            if let datapoint: OMHDataPoint = transformer.transform(intermediateResult: intermediateResult, additionalMetadata: additionalMetadata) {
                 
                 //submit data point
                 self.ls2Mananager.addDatapoint(datapoint: datapoint) { (error) in
@@ -34,5 +43,7 @@ open class LS2BackEnd: RSRPBackEnd {
         }
         
     }
+    
+    open var getAdditionalMetadata: (() -> [String: Any]?)?
     
 }

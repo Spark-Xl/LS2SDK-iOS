@@ -11,8 +11,12 @@ import ResearchSuiteResultsProcessor
 
 open class OMHDefaultTransformer: OMHIntermediateDatapointTransformer {
     
-    open static func transform(intermediateResult: RSRPIntermediateResult) -> OMHDataPoint? {
-        return intermediateResult as? OMHDataPoint
+    public static func transform(intermediateResult: RSRPIntermediateResult, additionalMetadata: [String : Any]?) -> OMHDataPointBuilder? {
+        guard let datapoint = intermediateResult as? OMHDataPointBuilder else {
+            return nil
+        }
+        
+        return OMHDataPointWithMetadataProxy(datapoint: datapoint, additionalMetadata: additionalMetadata)
     }
     
 }

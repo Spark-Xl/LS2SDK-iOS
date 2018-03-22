@@ -10,5 +10,5 @@ import ResearchSuiteResultsProcessor
 import OMHClient
 
 public protocol OMHIntermediateDatapointTransformer {
-    static func transform(intermediateResult: RSRPIntermediateResult) -> OMHDataPoint?
+    static func transform(intermediateResult: RSRPIntermediateResult, additionalMetadata: [String: Any]?) -> OMHDataPointBuilder?
 }
