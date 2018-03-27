@@ -9,31 +9,27 @@ import UIKit
 import SecureQueue
 import Alamofire
 import OMHClient
-
-public protocol LS2CredentialStore {
-    func set(value: NSSecureCoding?, key: String)
-    func get(key: String) -> NSSecureCoding?
-}
+import ResearchSuiteExtensions
 
 public protocol LS2Logger {
     func log(_ debugString: String)
 }
 
 public protocol LS2ManagerDelegate: class {
-    
     func onInvalidToken(manager: LS2Manager) -> Bool
-    
 }
 
 open class LS2Manager: NSObject {
     
-    static let kAuthToken = "AuthToken"
+    static let kAuthToken = "ls2_auth_token"
+    static let kUsername = "ls2_username"
+    static let kPassword = "ls2_password"
     
     var client: LS2Client!
     var secureQueue: SecureQueue!
     
     var credentialsQueue: DispatchQueue!
-    var credentialStore: LS2CredentialStore!
+    var credentialStore: RSCredentialsStore!
     var credentialStoreQueue: DispatchQueue!
     var authToken: String?
     
@@ -50,7 +46,7 @@ open class LS2Manager: NSObject {
     public init?(
         baseURL: String,
         queueStorageDirectory: String,
-        store: LS2CredentialStore,
+        store: RSCredentialsStore,
         logger: LS2Logger? = nil,
         serverTrustPolicyManager: ServerTrustPolicyManager? = nil
         ) {
@@ -118,6 +114,43 @@ open class LS2Manager: NSObject {
         NotificationCenter.default.removeObserver(self.protectedDataAvaialbleObserver)
     }
     
+    public func generateParticipantAccount(generatorCredentials: LS2ParticipantAccountGeneratorCredentials, completion: @escaping ((Error?) -> ())) {
+        //check for credentials
+        if self.hasCredentials {
+            completion(LS2ManagerErrors.hasCredentials)
+            return
+        }
+        
+        self.client.generateParticipantAccount(generatorCredentials: generatorCredentials) { (response, error) in
+            
+            if let err = error {
+                
+                completion(err)
+                return
+                
+            }
+            
+            if let credentials = response {
+                self.setCredentials(username: credentials.username, password: credentials.password)
+            }
+            
+            completion(nil) 
+            
+        }
+        
+        //call client
+    }
+    
+    public func signInWithCredentials(forceSignIn:Bool = false, completion: @escaping ((Error?) -> ())) {
+        guard let username = self.getUsername(),
+            let password = self.getPassword() else {
+                completion(LS2ManagerErrors.doesNotHaveCredentials)
+                return
+        }
+        
+        self.signIn(username: username, password: password, forceSignIn: forceSignIn, completion: completion)
+    }
+    
     public func signIn(username: String, password: String, forceSignIn:Bool = false, completion: @escaping ((Error?) -> ())) {
         
         if self.isSignedIn && forceSignIn == false {
@@ -136,7 +169,7 @@ open class LS2Manager: NSObject {
             }
             
             if let response = signInResponse {
-                self.setCredentials(authToken: response.authToken)
+                self.setAuthToken(authToken: response.authToken)
             }
             
             self.reachabilityManager.startListening()
@@ -219,6 +252,20 @@ open class LS2Manager: NSObject {
         return self.getAuthToken() != nil
     }
     
+    public var hasCredentials: Bool {
+        return self.credentialsQueue.sync {
+            
+            guard let _ = self.credentialStore.get(key: LS2Manager.kUsername),
+                let _ = self.credentialStore.get(key: LS2Manager.kPassword) else {
+                    return false
+            }
+            
+            return true
+        }
+    }
+    
+    
+    
     public var queueIsEmpty: Bool {
         return self.secureQueue.isEmpty
     }
@@ -231,13 +278,25 @@ open class LS2Manager: NSObject {
         self.credentialsQueue.sync {
             self.credentialStoreQueue.async {
                 self.credentialStore.set(value: nil, key: LS2Manager.kAuthToken)
+                self.credentialStore.set(value: nil, key: LS2Manager.kUsername)
+                self.credentialStore.set(value: nil, key: LS2Manager.kPassword)
             }
             self.authToken = nil
             return
         }
     }
     
-    private func setCredentials(authToken: String) {
+    private func setCredentials(username: String, password: String) {
+        self.credentialsQueue.sync {
+            self.credentialStoreQueue.async {
+                self.credentialStore.set(value: username as NSString, key: LS2Manager.kUsername)
+                self.credentialStore.set(value: password as NSString, key: LS2Manager.kPassword)
+            }
+            return
+        }
+    }
+    
+    private func setAuthToken(authToken: String) {
         self.credentialsQueue.sync {
             self.credentialStoreQueue.async {
                 self.credentialStore.set(value: authToken as NSString, key: LS2Manager.kAuthToken)
@@ -247,6 +306,22 @@ open class LS2Manager: NSObject {
         }
     }
     
+    public func getUsername() -> String? {
+        return self.credentialsQueue.sync {
+            return self.credentialStoreQueue.sync {
+                return self.credentialStore.get(key: LS2Manager.kUsername) as? String
+            }
+        }
+    }
+
+    public func getPassword() -> String? {
+        return self.credentialsQueue.sync {
+            return self.credentialStoreQueue.sync {
+                return self.credentialStore.get(key: LS2Manager.kPassword) as? String
+            }
+        }
+    }
+
     private func getAuthToken() -> String? {
         return self.credentialsQueue.sync {
             return self.authToken

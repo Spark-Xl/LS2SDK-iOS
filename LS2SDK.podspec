@@ -35,13 +35,13 @@ TODO: Add long description of the pod here.
     core.dependency 'OMHClient', '~> 0.3'
     core.dependency 'SecureQueue'
     core.dependency 'Alamofire', '~> 4'
+    core.dependency 'ResearchSuiteExtensions', '~> 0.11'
   end
 
   s.subspec 'RKSupport' do |rks|
     rks.source_files = 'Source/RKSupport/**/*'
     rks.dependency 'LS2SDK/Core'
     rks.dependency 'ResearchKit', '~> 1.5'
-    rks.dependency 'ResearchSuiteExtensions', '~> 0.7'
   end
 
   s.subspec 'RSTBSupport' do |rstb|

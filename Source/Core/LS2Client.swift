@@ -9,10 +9,25 @@ import UIKit
 import Alamofire
 import OMHClient
 
+public struct LS2ParticipantAccountGeneratorCredentials {
+    public let generatorId: String
+    public let generatorPassword: String
+    
+    public init(generatorId: String, generatorPassword: String) {
+        self.generatorId = generatorId
+        self.generatorPassword = generatorPassword
+    }
+}
+
 open class LS2Client: NSObject {
     
     public struct SignInResponse {
         public let authToken: String
+    }
+    
+    public struct ParticipantAccountGenerationResponse: Decodable {
+        public let username: String
+        public let password: String
     }
     
     let baseURL: String
@@ -30,6 +45,66 @@ open class LS2Client: NSObject {
         
         super.init()
     }
+    
+    open func processParticipantAccountGenerationResponse(completion: @escaping ((ParticipantAccountGenerationResponse?, Error?) -> ())) -> (DataResponse<Any>) -> () {
+        return { jsonResponse in
+            debugPrint(jsonResponse)
+            //check for lower level errors
+            if let error = jsonResponse.result.error as? NSError {
+                if error.code == NSURLErrorNotConnectedToInternet {
+                    completion(nil, LS2ClientError.unreachableError(underlyingError: error))
+                    return
+                }
+                else {
+                    completion(nil, LS2ClientError.otherError(underlyingError: error))
+                    return
+                }
+            }
+            
+            //check for our errors
+            //credentialsFailure
+            guard let response = jsonResponse.response else {
+                completion(nil, LS2ClientError.malformedResponse(responseBody: jsonResponse))
+                return
+            }
+            
+            if let response = jsonResponse.response,
+                response.statusCode == 502 {
+                debugPrint(jsonResponse)
+                completion(nil, LS2ClientError.badGatewayError)
+                return
+            }
+            
+            guard jsonResponse.result.isSuccess,
+                let jsonData = jsonResponse.data,
+                let credentials = try? JSONDecoder().decode(ParticipantAccountGenerationResponse.self, from: jsonData) else {
+                    completion(nil, LS2ClientError.malformedResponse(responseBody: jsonResponse.result.value))
+                    return
+            }
+            
+            completion(credentials, nil)
+        }
+    }
+    
+    open func generateParticipantAccount(generatorCredentials: LS2ParticipantAccountGeneratorCredentials, completion: @escaping ((ParticipantAccountGenerationResponse?, Error?) -> ())) {
+        
+        let urlString = "\(self.baseURL)/account/generate"
+        let parameters = [
+            "generator_id": generatorCredentials.generatorId,
+            "generator_password": generatorCredentials.generatorPassword
+        ]
+        
+        let request = self.sessionManager.request(
+            urlString,
+            method: .post,
+            parameters: parameters,
+            encoding: JSONEncoding.default)
+        
+        request.responseJSON(queue: self.dispatchQueue, completionHandler: self.processParticipantAccountGenerationResponse(completion: completion))
+        
+    }
+    
+    
     
     open func processAuthResponse(isRefresh: Bool, completion: @escaping ((SignInResponse?, Error?) -> ())) -> ((DataResponse<Any>) -> ()) {
         
@@ -343,6 +418,4 @@ open class LS2Client: NSObject {
         
     }
     
-    
-
 }
