@@ -7,4 +7,5 @@
 
 public protocol LS2ManagerProvider {
     func getManager() -> LS2Manager?
+    func getParticipantAccountGeneratorCredentials() -> LS2ParticipantAccountGeneratorCredentials?
 }

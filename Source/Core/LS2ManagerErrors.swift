@@ -12,5 +12,7 @@ public enum LS2ManagerErrors: Error {
     case alreadySignedIn
     case notSignedIn
     case invalidDatapoint
+    case hasCredentials
+    case doesNotHaveCredentials
     
 }
