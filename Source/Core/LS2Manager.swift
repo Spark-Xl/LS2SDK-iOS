@@ -6,9 +6,7 @@
 //
 
 import UIKit
-import SecureQueue
 import Alamofire
-import OMHClient
 import ResearchSuiteExtensions
 
 public protocol LS2Logger {
@@ -26,7 +24,7 @@ open class LS2Manager: NSObject {
     static let kPassword = "ls2_password"
     
     var client: LS2Client!
-    var secureQueue: SecureQueue!
+    var datapointQueue: RSGlossyQueue<LS2Datapoint>
     
     var credentialsQueue: DispatchQueue!
     var credentialStore: RSCredentialsStore!
@@ -54,7 +52,7 @@ open class LS2Manager: NSObject {
         self.uploadQueue = DispatchQueue(label: "UploadQueue")
         
         self.client = LS2Client(baseURL: baseURL, dispatchQueue: self.uploadQueue, serverTrustPolicyManager: serverTrustPolicyManager)
-        self.secureQueue = SecureQueue(directoryName: queueStorageDirectory, allowedClasses: [NSDictionary.self, NSArray.self])
+        self.datapointQueue = RSGlossyQueue(directoryName: queueStorageDirectory, allowedClasses: [NSDictionary.self, NSArray.self])!
         
         self.credentialsQueue = DispatchQueue(label: "CredentialsQueue")
         
@@ -228,7 +226,7 @@ open class LS2Manager: NSObject {
                 
                 self.reachabilityManager.stopListening()
                 
-                try self.secureQueue.clear()
+                try self.datapointQueue.clear()
                 self.clearCredentials()
                 
                 completion(nil)
@@ -267,11 +265,11 @@ open class LS2Manager: NSObject {
     
     
     public var queueIsEmpty: Bool {
-        return self.secureQueue.isEmpty
+        return self.datapointQueue.isEmpty
     }
     
     public var queueItemCount: Int {
-        return self.secureQueue.count
+        return self.datapointQueue.count
     }
     
     private func clearCredentials() {
@@ -328,30 +326,23 @@ open class LS2Manager: NSObject {
         }
     }
     
-    public func addDatapoint(datapoint: OMHDataPoint, completion: @escaping ((Error?) -> ())) {
+    public func addDatapoint(datapoint: LS2Datapoint, completion: @escaping ((Error?) -> ())) {
         
         if !self.isSignedIn {
             completion(LS2ManagerErrors.notSignedIn)
             return
         }
-        
-        if !self.client.validateSample(sample: datapoint) {
-            completion(LS2ManagerErrors.invalidDatapoint)
-            return
-        }
-        
+
+        //vaidation is done by the queue
+//        if !self.client.validateDatapoint(datapoint: datapoint) {
+//            completion(LS2ManagerErrors.invalidDatapoint)
+//            return
+//        }
+
         do {
             
-            var elementDictionary: [String: Any] = [
-                "datapoint": datapoint.toDict()
-            ]
+            try self.datapointQueue.addGlossyElement(element: datapoint)
             
-            if let mediaDatapoint = datapoint as? OMHMediaDataPoint {
-                assertionFailure("media not yet supported!!")
-                elementDictionary["mediaAttachments"] = mediaDatapoint.attachments as NSArray
-            }
-            
-            try self.secureQueue.addElement(element: elementDictionary as NSDictionary)
         } catch let error {
             completion(error)
             return
@@ -375,46 +366,36 @@ open class LS2Manager: NSObject {
         
         self.uploadQueue.async {
             
-            guard let queue = self.secureQueue,
-                !queue.isEmpty,
+            let queue = self.datapointQueue
+            guard !queue.isEmpty,
                 !self.isUploading else {
                     return
             }
             
-            let wappedGetFunction: () throws -> (String, NSSecureCoding)? = {
+            let wappedGetFunction: () throws -> RSGlossyQueue<LS2Datapoint>.RSGlossyQueueElement? = {
                 
                 if fromMemory {
-                    return self.secureQueue.getFirstInMemoryElement()
+                    return try self.datapointQueue.getFirstInMemoryGlossyElement()
                 }
                 else {
-                    return try self.secureQueue.getFirstElement()
+                    return try self.datapointQueue.getFirstGlossyElement()
                 }
                 
             }
             
             do {
                 
-                if let (elementId, value) = try wappedGetFunction(),
-                    let dataPointDict = value as? [String: Any],
-                    let datapoint = dataPointDict["datapoint"] as? [String: Any],
+                if let elementPair = try wappedGetFunction(),
                     let token = self.authToken {
-                    
-                    assert(dataPointDict["mediaAttachments"] == nil, "Media attachments are not yet supported")
-//                    let mediaAttachments: [OMHMediaAttachment]? = dataPointDict["mediaAttachments"] as? [OMHMediaAttachment]
-//                    let mediaAttachmentUploadSuccess = self.onMediaAttachmentUploaded
-//                    let datapointUploadSuccess = self.onDatapointUploaded
-                    
+
+                    let datapoint: LS2Datapoint = elementPair.element
                     self.isUploading = true
+                    self.logger?.log("posting datapoint with id: \(datapoint.header.id)")
                     
-                    if let datapointHeader = datapoint["header"] as? [String: Any],
-                        let datapointId = datapointHeader["id"] as? String {
-                        self.logger?.log("posting datapoint with id: \(datapointId)")
-                    }
-                    
-                    self.client.postSample(sampleDict: datapoint, token: token, completion: { (success, error) in
+                    self.client.postDatapoint(datapoint: datapoint, token: token, completion: { (success, error) in
                         
                         self.isUploading = false
-                        self.processUploadResponse(elementId: elementId, fromMemory: fromMemory, success: success, error: error)
+                        self.processUploadResponse(element: elementPair, fromMemory: fromMemory, success: success, error: error)
                         
                     })
 
@@ -439,7 +420,7 @@ open class LS2Manager: NSObject {
     
     }
     
-    private func processUploadResponse(elementId: String, fromMemory: Bool, success: Bool, error: Error?) {
+    private func processUploadResponse(element: RSGlossyQueue<LS2Datapoint>.RSGlossyQueueElement, fromMemory: Bool, success: Bool, error: Error?) {
         
         if let err = error {
             debugPrint(err)
@@ -471,7 +452,7 @@ open class LS2Manager: NSObject {
                 self.logger?.log("datapoint conflict: removing")
                 
                 do {
-                    try self.secureQueue.removeElement(elementId: elementId)
+                    try self.datapointQueue.removeGlossyElement(element: element)
                     
                 } catch let error {
                     //we tried to delete,
@@ -488,7 +469,7 @@ open class LS2Manager: NSObject {
                 self.logger?.log("datapoint invalid: removing")
                 
                 do {
-                    try self.secureQueue.removeElement(elementId: elementId)
+                    try self.datapointQueue.removeGlossyElement(element: element)
                     
                 } catch let error {
                     //we tried to delete,
@@ -520,7 +501,7 @@ open class LS2Manager: NSObject {
             //remove from queue
             self.logger?.log("success: removing data point")
             do {
-                try self.secureQueue.removeElement(elementId: elementId)
+                try self.datapointQueue.removeGlossyElement(element: element)
                 
             } catch let error {
                 //we tried to delete,

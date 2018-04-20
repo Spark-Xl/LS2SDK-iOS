@@ -7,7 +7,6 @@
 
 import UIKit
 import Alamofire
-import OMHClient
 
 public struct LS2ParticipantAccountGeneratorCredentials {
     public let generatorId: String
@@ -245,22 +244,40 @@ open class LS2Client: NSObject {
         
         
     }
-    
-    
-    
-    open func validateSample(sample: OMHDataPoint) -> Bool {
+
+    open func validateDatapoint(datapoint: LS2Datapoint) -> Bool {
         
-        let sampleDict = sample.toDict()
-        return JSONSerialization.isValidJSONObject(sampleDict)
+        guard let json = datapoint.toJSON() else {
+            return false
+        }
+        
+        return JSONSerialization.isValidJSONObject(json)
         
     }
-    
-    open func postSample(
-        sampleDict: OMHDataPointDictionary,
-        token: String,
-        completion: @escaping ((Bool, Error?) -> ())) {
+
+    open func postDatapoint(datapoint: LS2Datapoint, token: String, completion: @escaping ((Bool, Error?) -> ())) {
         
-        self.postJSONSample(sampleDict: sampleDict, token: token, completion: completion)
+        let urlString = "\(self.baseURL)/dataPoints"
+        let headers = ["Authorization": "Token \(token)", "Accept": "application/json"]
+        
+        guard let datapointJSON = datapoint.toJSON(),
+            JSONSerialization.isValidJSONObject(datapointJSON) else {
+            completion(false, LS2ClientError.invalidDatapoint)
+            return
+        }
+        
+        debugPrint(datapoint.description)
+        
+        let request = self.sessionManager.request(
+            urlString,
+            method: .post,
+            parameters: datapointJSON,
+            encoding: JSONEncoding.default,
+            headers: headers)
+        
+        let reponseProcessor: (DataResponse<Any>) -> () = self.processDatapointUploadResponse(completion: completion)
+        
+        request.responseJSON(queue: self.dispatchQueue, completionHandler: reponseProcessor)
         
     }
     
@@ -326,29 +343,6 @@ open class LS2Client: NSObject {
         
     }
 
-    private func postJSONSample(sampleDict: OMHDataPointDictionary, token: String, completion: @escaping ((Bool, Error?) -> ())) {
-        let urlString = "\(self.baseURL)/dataPoints"
-        let headers = ["Authorization": "Token \(token)", "Accept": "application/json"]
-        let params = sampleDict
-        
-        guard JSONSerialization.isValidJSONObject(sampleDict) else {
-            completion(false, LS2ClientError.invalidDatapoint)
-            return
-        }
-        
-        let request = self.sessionManager.request(
-            urlString,
-            method: .post,
-            parameters: params,
-            encoding: JSONEncoding.default,
-            headers: headers)
-        
-        let reponseProcessor: (DataResponse<Any>) -> () = self.processDatapointUploadResponse(completion: completion)
-        
-        request.responseJSON(queue: self.dispatchQueue, completionHandler: reponseProcessor)
-        
-    }
-    
     private func processDatapointUploadResponse(completion: @escaping ((Bool, Error?) -> ())) -> (DataResponse<Any>) -> () {
         
         return { jsonResponse in

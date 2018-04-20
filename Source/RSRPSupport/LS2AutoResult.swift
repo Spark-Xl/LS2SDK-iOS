@@ -1,16 +1,16 @@
 //
-//  OMHAutoResult.swift
+//  LS2AutoResult.swift
 //  LS2SDK
 //
-//  Created by James Kizer on 1/17/18.
+//  Created by James Kizer on 4/19/18.
 //
 
 import UIKit
-import OMHClient
 import ResearchSuiteResultsProcessor
 import ResearchKit
+import Gloss
 
-open class OMHAutoResult: RSRPIntermediateResult, RSRPFrontEndTransformer {
+open class LS2AutoResult: RSRPIntermediateResult, RSRPFrontEndTransformer {
     
     private static let supportedTypes = [
         "auto"
@@ -20,10 +20,7 @@ open class OMHAutoResult: RSRPIntermediateResult, RSRPFrontEndTransformer {
         return self.supportedTypes.contains(type)
     }
     
-    
-    
     public class func extractResults(parameters: [String : AnyObject], forSerialization: Bool) -> [String: AnyObject]? {
-        
         
         //look for arrays of step results
         
@@ -64,7 +61,7 @@ open class OMHAutoResult: RSRPIntermediateResult, RSRPFrontEndTransformer {
                     }
                     
                 })
-
+                
             }
             
         }
@@ -74,51 +71,46 @@ open class OMHAutoResult: RSRPIntermediateResult, RSRPFrontEndTransformer {
     }
     
     public class func transform(taskIdentifier: String, taskRunUUID: UUID, parameters: [String : AnyObject]) -> RSRPIntermediateResult? {
-        
-        //extract schema info
-        guard let schemaDict = parameters["schema"] as? [String: String],
-            let schemaNamespace = schemaDict["namespace"],
-            let schemaName = schemaDict["name"],
-            let schemaVersion = schemaDict["version"] else {
-                return nil
-        }
-        
-        let schema = OMHSchema(name: schemaName, version: schemaVersion, namespace: schemaNamespace)
-        
-        guard let resultDict = OMHAutoResult.extractResults(parameters: parameters, forSerialization: true) else {
+
+        guard let schema: LS2Schema = "schema" <~~ parameters else {
             return nil
         }
         
-        let defaultResult = OMHAutoResult(
+        guard let resultDict = LS2AutoResult.extractResults(parameters: parameters, forSerialization: true) else {
+            return nil
+        }
+
+        let result = LS2AutoResult(
             uuid: UUID(),
             taskIdentifier: taskIdentifier,
             taskRunUUID: taskRunUUID,
             schema: schema,
-            resultDict: resultDict)
+            resultDict: resultDict
+        )
         
-        defaultResult.startDate = RSRPDefaultResultHelpers.startDate(parameters: parameters)
-        defaultResult.endDate = RSRPDefaultResultHelpers.endDate(parameters: parameters)
+        result.startDate = RSRPDefaultResultHelpers.startDate(parameters: parameters)
+        result.endDate = RSRPDefaultResultHelpers.endDate(parameters: parameters)
         
-        return defaultResult
+        return result
         
     }
     
-    public let schema: OMHSchema
-    public let resultDict: [String: AnyObject]
+    public let schema: LS2Schema
+    public let resultDict: JSON
     
     public init(
         uuid: UUID,
         taskIdentifier: String,
         taskRunUUID: UUID,
-        schema: OMHSchema,
-        resultDict: [String: AnyObject]
+        schema: LS2Schema,
+        resultDict: JSON
         ) {
         
         self.schema = schema
         self.resultDict = resultDict
         
         super.init(
-            type: "OMHAutoResult",
+            type: "LS2AutoResult",
             uuid: uuid,
             taskIdentifier: taskIdentifier,
             taskRunUUID: taskRunUUID
@@ -126,26 +118,19 @@ open class OMHAutoResult: RSRPIntermediateResult, RSRPFrontEndTransformer {
     }
 }
 
-extension OMHAutoResult: OMHDataPointBuilder {
-    
-    open var dataPointID: String {
-        return self.uuid.uuidString
+extension LS2AutoResult: LS2DatapointConvertible {
+    public func toDatapoint() -> LS2Datapoint? {
+        
+        let sourceName = LS2AcquisitionProvenance.defaultAcquisitionSourceName
+        let creationDate = self.startDate ?? Date()
+        let acquisitionSource = LS2AcquisitionProvenance(sourceName: sourceName, sourceCreationDateTime: creationDate, modality: .SelfReported)
+        
+        let header = LS2DatapointHeader(id: self.uuid, schemaID: self.schema, acquisitionProvenance: acquisitionSource)
+        let datapoint = LS2Datapoint(header: header, body: self.resultDict)
+        return datapoint
+        
     }
-    
-    open var acquisitionModality: OMHAcquisitionProvenanceModality {
-        return .SelfReported
-    }
-    
-    open var acquisitionSourceCreationDateTime: Date {
-        return self.startDate ?? Date()
-    }
-    
-    open var acquisitionSourceName: String {
-        return OMHDefaultResult.defaultAcquisitionSourceName
-    }
-    
-    open var body: [String: Any] {
-        return self.resultDict
-    }
-    
+
 }
+
+

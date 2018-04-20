@@ -6,16 +6,15 @@
 //
 
 import UIKit
-import OMHClient
 import ResearchSuiteResultsProcessor
 
 open class LS2BackEnd: RSRPBackEnd {
     
     let ls2Mananager: LS2Manager
-    let transformers: [OMHIntermediateDatapointTransformer.Type]
+    let transformers: [LS2IntermediateDatapointTranformer.Type]
     
     public init(ls2Mananager: LS2Manager,
-                transformers: [OMHIntermediateDatapointTransformer.Type] = [OMHDefaultTransformer.self]) {
+                transformers: [LS2IntermediateDatapointTranformer.Type] = [LS2DefaultTransformer.self]) {
         
         self.ls2Mananager = ls2Mananager
         self.transformers = transformers
@@ -33,7 +32,7 @@ open class LS2BackEnd: RSRPBackEnd {
                 }
             }()
             
-            if let datapoint: OMHDataPoint = transformer.transform(intermediateResult: intermediateResult, additionalMetadata: additionalMetadata) {
+            if let datapoint: LS2Datapoint = transformer.transform(intermediateResult: intermediateResult, additionalMetadata: additionalMetadata) {
                 
                 //submit data point
                 self.ls2Mananager.addDatapoint(datapoint: datapoint) { (error) in
