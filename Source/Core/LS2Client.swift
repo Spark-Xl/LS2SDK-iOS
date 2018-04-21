@@ -61,9 +61,8 @@ open class LS2Client: NSObject {
     
     open func processParticipantAccountGenerationResponse(completion: @escaping ((ParticipantAccountGenerationResponse?, Error?) -> ())) -> (DataResponse<Any>) -> () {
         return { jsonResponse in
-            debugPrint(jsonResponse)
             //check for lower level errors
-            if let error = jsonResponse.result.error as? NSError {
+            if let error = jsonResponse.result.error as NSError? {
                 if error.code == NSURLErrorNotConnectedToInternet {
                     completion(nil, LS2ClientError.unreachableError(underlyingError: error))
                     return
@@ -81,9 +80,7 @@ open class LS2Client: NSObject {
                 return
             }
             
-            if let response = jsonResponse.response,
-                response.statusCode == 502 {
-                debugPrint(jsonResponse)
+            if response.statusCode == 502 {
                 completion(nil, LS2ClientError.badGatewayError)
                 return
             }
@@ -123,9 +120,8 @@ open class LS2Client: NSObject {
         
         return { jsonResponse in
             
-            debugPrint(jsonResponse)
             //check for lower level errors
-            if let error = jsonResponse.result.error as? NSError {
+            if let error = jsonResponse.result.error as NSError? {
                 if error.code == NSURLErrorNotConnectedToInternet {
                     completion(nil, LS2ClientError.unreachableError(underlyingError: error))
                     return
@@ -143,9 +139,7 @@ open class LS2Client: NSObject {
                 return
             }
             
-            if let response = jsonResponse.response,
-                response.statusCode == 502 {
-                debugPrint(jsonResponse)
+            if response.statusCode == 502 {
                 completion(nil, LS2ClientError.badGatewayError)
                 return
             }
@@ -202,11 +196,8 @@ open class LS2Client: NSObject {
         return { jsonResponse in
             //check for actually success
             
-            debugPrint(jsonResponse)
-            
             switch jsonResponse.result {
             case .success:
-                print("Validation Successful")
                 guard let response = jsonResponse.response else {
                     completion(false, LS2ClientError.unknownError)
                     return
@@ -280,8 +271,6 @@ open class LS2Client: NSObject {
             return
         }
         
-        debugPrint(datapoint.description)
-        
         let request = self.sessionManager.request(
             urlString,
             method: .post,
@@ -316,7 +305,6 @@ open class LS2Client: NSObject {
         return { jsonResponse in
             //check for actually success
             
-            debugPrint(jsonResponse)
             //check for lower level errors
             if let error = jsonResponse.result.error as NSError? {
                 if error.code == NSURLErrorNotConnectedToInternet {
@@ -331,21 +319,18 @@ open class LS2Client: NSObject {
             
             //check for our errors
             //credentialsFailure
-            guard let _ = jsonResponse.response else {
+            guard let response = jsonResponse.response else {
                 completion(false, LS2ClientError.malformedResponse(responseBody: jsonResponse))
                 return
             }
             
-            if let response = jsonResponse.response,
-                response.statusCode == 502 {
-                debugPrint(jsonResponse)
+            if response.statusCode == 502 {
                 completion(false, LS2ClientError.badGatewayError)
                 return
             }
             
             //check for malformed body
             guard jsonResponse.result.isSuccess,
-                let response = jsonResponse.response,
                 response.statusCode == 200 else {
                     completion(false, LS2ClientError.malformedResponse(responseBody: jsonResponse.result.value))
                     return
@@ -362,11 +347,8 @@ open class LS2Client: NSObject {
         return { jsonResponse in
             //check for actually success
             
-            debugPrint(jsonResponse)
-            
             switch jsonResponse.result {
             case .success:
-                print("Validation Successful")
                 guard let response = jsonResponse.response else {
                     completion(false, LS2ClientError.unknownError)
                     return

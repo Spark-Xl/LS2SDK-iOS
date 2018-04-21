@@ -36,7 +36,6 @@ open class LS2LoginStepViewController: RSLoginStepViewController {
                 
                 self.isLoading = false
                 
-                debugPrint(error)
                 if error == nil {
                     self.loggedIn = true
                     completion(true)
@@ -49,7 +48,7 @@ open class LS2LoginStepViewController: RSLoginStepViewController {
                         // Replace UIAlertActionStyle.Default by UIAlertActionStyle.default
                         let okAction = UIAlertAction(title: "OK", style: UIAlertActionStyle.default) {
                             (result : UIAlertAction) -> Void in
-                            print("OK")
+                            
                         }
                         
                         alertController.addAction(okAction)

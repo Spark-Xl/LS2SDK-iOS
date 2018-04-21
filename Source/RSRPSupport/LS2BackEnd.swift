@@ -50,7 +50,7 @@ open class LS2BackEnd: RSRPBackEnd {
                 
                 //submit data point
                 self.ls2Mananager.addDatapoint(datapoint: datapoint) { (error) in
-                    debugPrint(error)
+                    
                 }
             }
         }

@@ -100,7 +100,7 @@ open class LS2Manager: NSObject {
                 do {
                     try startUploading()
                 } catch let error {
-                    debugPrint(error)
+                    self?.logger?.log("an error occurred when first trying to upload \(error)")
                 }
             }
         }
@@ -115,7 +115,6 @@ open class LS2Manager: NSObject {
                 try startUploading()
             } catch let error as NSError {
                 self?.logger?.log("error occurred when starting upload after device unlock: \(error.localizedDescription)")
-                debugPrint(error)
             }
             
         }
@@ -423,7 +422,6 @@ open class LS2Manager: NSObject {
             } catch let error {
                 //assume file system encryption error when tryong to read
                 self.logger?.log("secure queue threw when trying to get first element: \(error)")
-                debugPrint(error)
                 
                 //try uploading datapoint from memory
                 self.upload(fromMemory: true)
@@ -437,7 +435,6 @@ open class LS2Manager: NSObject {
     private func processUploadResponse(element: RSGlossyQueue<LS2Datapoint>.RSGlossyQueueElement, fromMemory: Bool, success: Bool, error: Error?) {
         
         if let err = error {
-            debugPrint(err)
             self.logger?.log("Got error while posting datapoint: \(error.debugDescription)")
             //should we retry here?
             // and if so, under what conditions
@@ -470,7 +467,7 @@ open class LS2Manager: NSObject {
                     
                 } catch let error {
                     //we tried to delete,
-                    debugPrint(error)
+                    self.logger?.log("An error occured when trying to remove the datapoint \(error)")
                 }
                 
                 self.upload(fromMemory: fromMemory)
@@ -487,7 +484,7 @@ open class LS2Manager: NSObject {
                     
                 } catch let error {
                     //we tried to delete,
-                    debugPrint(error)
+                    self.logger?.log("An error occurred when trying to remove the element \(error)")
                 }
                 
                 self.upload(fromMemory: fromMemory)
@@ -519,7 +516,7 @@ open class LS2Manager: NSObject {
                 
             } catch let error {
                 //we tried to delete,
-                debugPrint(error)
+                self.logger?.log("An error occurred trying to remove the element \(error)")
             }
             
             self.upload(fromMemory: fromMemory)
