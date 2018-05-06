@@ -28,5 +28,6 @@ public enum LS2ManagerErrors: Error {
     case invalidDatapoint
     case hasCredentials
     case doesNotHaveCredentials
+    case programmingError
     
 }

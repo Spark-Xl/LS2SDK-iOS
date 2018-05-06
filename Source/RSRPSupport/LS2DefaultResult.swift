@@ -83,15 +83,14 @@ open class LS2DefaultResult: RSRPIntermediateResult, RSRPFrontEndTransformer {
 }
 
 extension LS2DefaultResult: LS2DatapointConvertible {
-    public func toDatapoint() -> LS2Datapoint? {
+    public func toDatapoint(builder: LS2DatapointBuilder.Type) -> LS2Datapoint? {
         
         let sourceName = LS2AcquisitionProvenance.defaultAcquisitionSourceName
         let creationDate = self.startDate ?? Date()
         let acquisitionSource = LS2AcquisitionProvenance(sourceName: sourceName, sourceCreationDateTime: creationDate, modality: .SelfReported)
         
         let header = LS2DatapointHeader(id: self.uuid, schemaID: self.schema, acquisitionProvenance: acquisitionSource)
-        let datapoint = LS2Datapoint(header: header, body: self.resultDict)
-        return datapoint
+        return builder.createDatapoint(header: header, body: self.resultDict)
         
     }
     

@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'LS2SDK'
-  s.version          = '0.7.2'
+  s.version          = '0.8.0'
   s.summary          = 'A short description of LS2SDK.'
 
 # This description is used to generate tags and improve search results.
@@ -31,8 +31,14 @@ TODO: Add long description of the pod here.
   s.ios.deployment_target = '10.0'
   s.swift_version = '4.1'
 
+  s.subspec 'Common' do |common|
+    common.source_files = 'Source/Common/**/*'
+    common.dependency 'Gloss', '~> 2.0'
+  end
+
   s.subspec 'Core' do |core|
     core.source_files = 'Source/Core/**/*'
+    core.dependency 'LS2SDK/Common'
     core.dependency 'Alamofire', '~> 4'
     core.dependency 'ResearchSuiteExtensions', '~> 0.14'
     core.dependency 'Gloss', '~> 2.0'
@@ -57,6 +63,12 @@ TODO: Add long description of the pod here.
     rsrp.dependency 'ResearchSuiteResultsProcessor', '~> 0.8'
   end
 
+  s.subspec 'Database' do |db|
+    db.source_files = 'Source/Database/**/*'
+    db.dependency 'RealmSwift'
+  end
+
+  s.default_subspec = 'Common', 'Core', 'RKSupport', 'RSTBSupport', 'RSRPSupport'
   # s.default_subspec = 'Core'
 
 end

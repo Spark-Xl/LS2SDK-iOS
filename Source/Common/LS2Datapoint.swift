@@ -41,9 +41,17 @@ extension Glossy {
 
 public struct LS2SchemaVersion: CustomStringConvertible {
     
-    let major: Int
-    let minor: Int
-    let patch: Int
+    public let major: Int
+    public let minor: Int
+    public let patch: Int
+    
+    public init(major: Int, minor: Int, patch: Int) {
+        
+        self.major = major
+        self.minor = minor
+        self.patch = patch
+        
+    }
     
     public init?(versionString: String) {
         
@@ -69,9 +77,9 @@ public struct LS2SchemaVersion: CustomStringConvertible {
 }
 
 public struct LS2Schema: Glossy, CustomStringConvertible {
-    let name: String
-    let version: LS2SchemaVersion
-    let namespace: String
+    public let name: String
+    public let version: LS2SchemaVersion
+    public let namespace: String
     
     public init?(name: String, version: LS2SchemaVersion?, namespace: String) {
         
@@ -123,9 +131,9 @@ public enum LS2AcquisitionProvenanceModality: String {
 
 public struct LS2AcquisitionProvenance: Glossy, CustomStringConvertible {
     
-    let sourceName: String
-    let sourceCreationDateTime: Date
-    let modality: LS2AcquisitionProvenanceModality
+    public let sourceName: String
+    public let sourceCreationDateTime: Date
+    public let modality: LS2AcquisitionProvenanceModality
     
     public init(sourceName: String, sourceCreationDateTime: Date, modality: LS2AcquisitionProvenanceModality) {
         self.sourceName = sourceName
@@ -200,10 +208,10 @@ public struct LS2AcquisitionProvenance: Glossy, CustomStringConvertible {
 
 public struct LS2DatapointHeader: Glossy, CustomStringConvertible {
     
-    let id: UUID
-    let schemaID: LS2Schema
-    let acquisitionProvenance: LS2AcquisitionProvenance
-    var metadata: JSON?
+    public let id: UUID
+    public let schemaID: LS2Schema
+    public let acquisitionProvenance: LS2AcquisitionProvenance
+    public var metadata: JSON?
     
     public init(id: UUID, schemaID: LS2Schema, acquisitionProvenance: LS2AcquisitionProvenance, metadata: JSON? = nil) {
         
@@ -245,12 +253,39 @@ public struct LS2DatapointHeader: Glossy, CustomStringConvertible {
     
 }
 
-public struct LS2Datapoint: Glossy, CustomStringConvertible {
+public protocol LS2Datapoint: Glossy {
+    var header: LS2DatapointHeader? { get }
+    var body: JSON? { get }
+}
+
+public protocol LS2DatapointBuilder {
+    static func createDatapoint(header: LS2DatapointHeader, body: JSON) -> LS2Datapoint?
+}
+
+//public protocol LS2DatapointEncodable {
+//    t
+//}
+
+//extension LS2Datapoint {
+//    public func toJSON() -> JSON? {
+//
+//        return jsonify([
+//            "header" ~~> self.header,
+//            "body" ~~> self.body
+//            ])
+//    }
+//}
+
+public struct LS2ConcreteDatapoint: LS2Datapoint, LS2DatapointBuilder {
     
-    let header: LS2DatapointHeader
-    let body: JSON
+    public static func createDatapoint(header: LS2DatapointHeader, body: JSON) -> LS2Datapoint? {
+        return LS2ConcreteDatapoint(header: header, body: body)
+    }
     
-    public init(header: LS2DatapointHeader, body: JSON) {
+    public let header: LS2DatapointHeader?
+    public let body: JSON?
+    
+    public init?(header: LS2DatapointHeader, body: JSON) {
         self.header = header
         self.body = body
     }
@@ -267,9 +302,14 @@ public struct LS2Datapoint: Glossy, CustomStringConvertible {
     
     public func toJSON() -> JSON? {
         
+        guard let header = self.header,
+            let body = self.body else {
+                return nil
+        }
+        
         return jsonify([
-            "header" ~~> self.header,
-            "body" ~~> self.body
+            "header" ~~> header,
+            "body" ~~> body
             ])
     }
     
@@ -278,7 +318,51 @@ public struct LS2Datapoint: Glossy, CustomStringConvertible {
     }
 }
 
+//we need one protocol for actual data elements to tranform to / from LS2 datapoint
+
+//we need another to represent the storage medium of the datapoint (e.g., struct, database object, etc)
+public protocol LS2DatapointCodable {
+    
+}
+
+public protocol LS2DatapointView {
+    
+}
+
+//public struct LS2Datapoint: Glossy, CustomStringConvertible {
+//
+//    let header: LS2DatapointHeader
+//    let body: JSON
+//
+//    public init(header: LS2DatapointHeader, body: JSON) {
+//        self.header = header
+//        self.body = body
+//    }
+//
+//    public init?(json: JSON) {
+//        guard let header: LS2DatapointHeader = "header" <~~ json,
+//            let body: JSON = "body" <~~ json else {
+//                return nil
+//        }
+//
+//        self.header = header
+//        self.body = body
+//    }
+//
+//    public func toJSON() -> JSON? {
+//
+//        return jsonify([
+//            "header" ~~> self.header,
+//            "body" ~~> self.body
+//            ])
+//    }
+//
+//    public var description: String {
+//        return self.prettyPrint() ?? ""
+//    }
+//}
+
 public protocol LS2DatapointConvertible {
-    func toDatapoint() -> LS2Datapoint?
+    func toDatapoint(builder: LS2DatapointBuilder.Type) -> LS2Datapoint?
 }
 

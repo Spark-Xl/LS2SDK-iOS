@@ -46,12 +46,20 @@ open class LS2BackEnd: RSRPBackEnd {
                 }
             }()
             
-            if let datapoint: LS2Datapoint = transformer.transform(intermediateResult: intermediateResult, additionalMetadata: additionalMetadata) {
+            if let convertible: LS2DatapointConvertible = transformer.transform(intermediateResult: intermediateResult, additionalMetadata: additionalMetadata),
+                let datapoint = convertible.toDatapoint(builder: LS2ConcreteDatapoint.self) as? LS2ConcreteDatapoint {
                 
                 //submit data point
+//                self.ls2Mananager.addDatapoint(datapoint: datapoint) { (error) in
+//
+//                }
+                
                 self.ls2Mananager.addDatapoint(datapoint: datapoint) { (error) in
                     
+                    
+                    
                 }
+                
             }
         }
         

@@ -23,11 +23,7 @@ import UIKit
 import ResearchSuiteResultsProcessor
 
 open class LS2DefaultTransformer: LS2IntermediateDatapointTranformer {
-    public static func transform(intermediateResult: RSRPIntermediateResult, additionalMetadata: [String : Any]?) -> LS2Datapoint? {
-        guard let datapointConvertible = intermediateResult as? LS2DatapointConvertible else {
-            return nil
-        }
-
-        return datapointConvertible.toDatapoint()
+    public static func transform(intermediateResult: RSRPIntermediateResult, additionalMetadata: [String : Any]?) -> LS2DatapointConvertible? {
+        return intermediateResult as? LS2DatapointConvertible
     }
 }

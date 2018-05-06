@@ -23,5 +23,5 @@ import UIKit
 import ResearchSuiteResultsProcessor
 
 public protocol LS2IntermediateDatapointTranformer {
-    static func transform(intermediateResult: RSRPIntermediateResult, additionalMetadata: [String: Any]?) -> LS2Datapoint?
+    static func transform(intermediateResult: RSRPIntermediateResult, additionalMetadata: [String: Any]?) -> LS2DatapointConvertible?
 }

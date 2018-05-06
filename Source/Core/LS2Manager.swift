@@ -38,7 +38,7 @@ open class LS2Manager: NSObject {
     static let kPassword = "ls2_password"
     
     var client: LS2Client!
-    var datapointQueue: RSGlossyQueue<LS2Datapoint>
+    var datapointQueue: RSGlossyQueue<LS2ConcreteDatapoint>
     
     var credentialsQueue: DispatchQueue!
     var credentialStore: RSCredentialsStore!
@@ -339,19 +339,18 @@ open class LS2Manager: NSObject {
         }
     }
     
-    public func addDatapoint(datapoint: LS2Datapoint, completion: @escaping ((Error?) -> ())) {
-        
+    public func addDatapoint(datapoint: LS2ConcreteDatapoint, completion: @escaping ((Error?) -> ())) {
         if !self.isSignedIn {
             completion(LS2ManagerErrors.notSignedIn)
             return
         }
-
+        
         //vaidation is done by the queue
-//        if !self.client.validateDatapoint(datapoint: datapoint) {
-//            completion(LS2ManagerErrors.invalidDatapoint)
-//            return
-//        }
-
+        //        if !self.client.validateDatapoint(datapoint: datapoint) {
+        //            completion(LS2ManagerErrors.invalidDatapoint)
+        //            return
+        //        }
+        
         do {
             
             try self.datapointQueue.addGlossyElement(element: datapoint)
@@ -363,6 +362,17 @@ open class LS2Manager: NSObject {
         
         self.upload(fromMemory: false)
         completion(nil)
+    }
+    
+    public func addDatapoint(datapointConvertible: LS2DatapointConvertible, completion: @escaping ((Error?) -> ())) {
+        
+        //this will always pass, but need to wrap in concrete datapoint type
+        guard let concreteDatapoint =  datapointConvertible.toDatapoint(builder: LS2ConcreteDatapoint.self) as? LS2ConcreteDatapoint else {
+            completion(LS2ManagerErrors.programmingError)
+            return
+        }
+        
+        self.addDatapoint(datapoint: concreteDatapoint, completion: completion)
         
     }
     
@@ -385,7 +395,7 @@ open class LS2Manager: NSObject {
                     return
             }
             
-            let wappedGetFunction: () throws -> RSGlossyQueue<LS2Datapoint>.RSGlossyQueueElement? = {
+            let wappedGetFunction: () throws -> RSGlossyQueue<LS2ConcreteDatapoint>.RSGlossyQueueElement? = {
                 
                 if fromMemory {
                     return try self.datapointQueue.getFirstInMemoryGlossyElement()
@@ -403,7 +413,7 @@ open class LS2Manager: NSObject {
 
                     let datapoint: LS2Datapoint = elementPair.element
                     self.isUploading = true
-                    self.logger?.log("posting datapoint with id: \(datapoint.header.id)")
+                    self.logger?.log("posting datapoint with id: \(datapoint.header?.id)")
                     
                     self.client.postDatapoint(datapoint: datapoint, token: token, completion: { (success, error) in
                         
@@ -432,7 +442,7 @@ open class LS2Manager: NSObject {
     
     }
     
-    private func processUploadResponse(element: RSGlossyQueue<LS2Datapoint>.RSGlossyQueueElement, fromMemory: Bool, success: Bool, error: Error?) {
+    private func processUploadResponse(element: RSGlossyQueue<LS2ConcreteDatapoint>.RSGlossyQueueElement, fromMemory: Bool, success: Bool, error: Error?) {
         
         if let err = error {
             self.logger?.log("Got error while posting datapoint: \(error.debugDescription)")
