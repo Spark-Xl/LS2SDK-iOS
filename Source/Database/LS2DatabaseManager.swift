@@ -80,6 +80,48 @@ open class LS2DatabaseManager: NSObject {
         super.init()
         
     }
+    
+    public func deleteRealm(completion: @escaping ((Error?) -> ())) {
+        
+        do {
+            
+            try self.datapointQueue.clear()
+            
+            self.getRealm(queue: .main) { (realm, error) in
+                
+                if error != nil {
+                    completion(error)
+                }
+                
+                guard let realm = realm else {
+                    fatalError("Could not get realm")
+                    completion(nil)
+                }
+                
+                do {
+                    
+                    try realm.write {
+                        realm.deleteAll()
+                    }
+                    
+                    try FileManager.default.removeItem(at: self.realmFile)
+                    completion(nil)
+                    
+                }
+                catch let error {
+                    fatalError("Could not remove realm")
+                    completion(error)
+                }
+                
+                
+                
+            }
+
+        } catch let error {
+            completion(error)
+        }
+        
+    }
 
     public func getRealm(queue: DispatchQueue, completion: @escaping (Realm?, Error?) -> Void) {
         let configuration = Realm.Configuration(
