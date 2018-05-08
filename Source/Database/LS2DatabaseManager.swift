@@ -13,7 +13,7 @@ open class LS2DatabaseManager: NSObject {
     
     static let kDatabaseKey = "ls2_database_key"
     
-    var credentialsQueue: DispatchQueue!
+//    var credentialsQueue: DispatchQueue!
     var credentialStore: RSCredentialsStore!
     
     let datapointQueue: RSGlossyQueue<LS2RealmDatapoint>
@@ -24,18 +24,41 @@ open class LS2DatabaseManager: NSObject {
     var isSyncing: Bool = false
     
     let realmFile: URL
-    let encryptionEnabled: Bool = false
-    let realmEncryptionKey: Data? = nil
+    let encryptionEnabled: Bool
+//    let realmEncryptionKey: Data?
     let schemaVersion: UInt64 = 0
     
     public init?(
         databaseStorageDirectory: String,
         databaseFileName: String,
-        queueStorageDirectory: String
+        queueStorageDirectory: String,
+        encrypted: Bool,
+        credentialStore: RSCredentialsStore
         ) {
         
         self.datapointQueue = RSGlossyQueue(directoryName: queueStorageDirectory, allowedClasses: [NSDictionary.self, NSArray.self])!
         self.syncQueue = DispatchQueue(label: "\(queueStorageDirectory)/UploadQueue")
+        
+        self.credentialStore = credentialStore
+        
+        self.encryptionEnabled = encrypted
+        if encrypted {
+            //check to see if a db key has been set
+            if let _ = self.credentialStore.get(key: LS2DatabaseManager.kDatabaseKey) {
+                
+            }
+            else {
+                var key = Data(count: 64)
+                _ = key.withUnsafeMutableBytes { bytes in
+                    SecRandomCopyBytes(kSecRandomDefault, 64, bytes)
+                }
+                
+                self.credentialStore.set(value: key as NSData, key: LS2DatabaseManager.kDatabaseKey)
+            }
+            
+            
+        }
+        
         
         guard let documentsPath = NSSearchPathForDirectoriesInDomains(FileManager.SearchPathDirectory.documentDirectory, FileManager.SearchPathDomainMask.userDomainMask, true).first else {
             return nil
@@ -63,7 +86,7 @@ open class LS2DatabaseManager: NSObject {
         
         do {
             
-            try FileManager.default.createDirectory(atPath: finalDatabaseDirectory, withIntermediateDirectories: true, attributes: nil)
+            try FileManager.default.createDirectory(atPath: finalDatabaseDirectory, withIntermediateDirectories: true, attributes: [.protectionKey: FileProtectionType.complete])
             var url: URL = URL(fileURLWithPath: finalDatabaseDirectory)
             var resourceValues: URLResourceValues = URLResourceValues()
             resourceValues.isExcludedFromBackup = true
@@ -78,6 +101,51 @@ open class LS2DatabaseManager: NSObject {
         self.realmFile = URL(fileURLWithPath: finalDatabaseFilePath)
         
         super.init()
+        
+        self.testRealmFileSettings()
+        
+    }
+    
+    func expectedFileProtection() -> FileProtectionType {
+        #if targetEnvironment(simulator)
+        return .completeUntilFirstUserAuthentication
+        #else
+        return .complete
+        #endif
+    }
+    
+    func testRealmFileSettings() {
+        //test that directory holding realm file does not back stuff up
+        let realmDirectory = self.realmFile.deletingLastPathComponent()
+        do {
+            let resourceValues = try realmDirectory.resourceValues(forKeys: [.isExcludedFromBackupKey])
+            assert(resourceValues.isExcludedFromBackup == true)
+        }
+        catch _ {
+            assertionFailure()
+        }
+        
+        
+        //only do it if the realm file exists
+        if FileManager.default.fileExists(atPath: self.realmFile.path) {
+            do {
+                let attributes = try FileManager.default.attributesOfItem(atPath: self.realmFile.path)
+                if let protectionKey = attributes[.protectionKey] as? FileProtectionType {
+                    let expectedFileProtection = self.expectedFileProtection()
+                    assert(protectionKey == expectedFileProtection)
+                }
+                else {
+                    assertionFailure()
+                }
+            }
+            catch _ {
+                assertionFailure()
+            }
+        }
+        
+        if self.encryptionEnabled {
+            assert(self.credentialStore.get(key: LS2DatabaseManager.kDatabaseKey) != nil)
+        }
         
     }
     
@@ -105,6 +173,8 @@ open class LS2DatabaseManager: NSObject {
                     }
                     
                     try FileManager.default.removeItem(at: self.realmFile)
+                    self.credentialStore.set(value: nil, key: LS2DatabaseManager.kDatabaseKey)
+                    
                     completion(nil)
                     
                 }
@@ -124,11 +194,16 @@ open class LS2DatabaseManager: NSObject {
     }
 
     public func getRealm(queue: DispatchQueue, completion: @escaping (Realm?, Error?) -> Void) {
+        
+        self.testRealmFileSettings()
+        
+        
+        
         let configuration = Realm.Configuration(
             fileURL: self.realmFile,
             inMemoryIdentifier: nil,
             syncConfiguration: nil,
-            encryptionKey: self.encryptionEnabled ? self.realmEncryptionKey : nil,
+            encryptionKey: self.encryptionEnabled ? (self.credentialStore.get(key: LS2DatabaseManager.kDatabaseKey) as? NSData) as! Data: nil,
             readOnly: false,
             schemaVersion: self.schemaVersion,
             migrationBlock: nil,
