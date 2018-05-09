@@ -44,7 +44,7 @@ open class LS2DefaultResult: RSRPIntermediateResult, RSRPFrontEndTransformer {
             return nil
         }
         
-        let result = LS2AutoResult(
+        let result = LS2DefaultResult(
             uuid: UUID(),
             taskIdentifier: taskIdentifier,
             taskRunUUID: taskRunUUID,

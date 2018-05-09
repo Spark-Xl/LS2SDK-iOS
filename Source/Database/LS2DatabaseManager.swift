@@ -11,7 +11,21 @@ import ResearchSuiteExtensions
 
 open class LS2DatabaseManager: NSObject {
     
+    public class LS2RealmProxy: NSObject {
+        
+        weak var realm: Realm?
+        init(realm: Realm?) {
+            self.realm = realm
+        }
+        
+        public func objects<Element: Object>(_ type: Element.Type) -> Results<Element>? {
+            return self.realm?.objects(type)
+        }
+
+    }
+    
     static let kDatabaseKey = "ls2_database_key"
+    static let kFileUUID = "ls2_file_uuid"
     
 //    var credentialsQueue: DispatchQueue!
     var credentialStore: RSCredentialsStore!
@@ -28,6 +42,8 @@ open class LS2DatabaseManager: NSObject {
 //    let realmEncryptionKey: Data?
     let schemaVersion: UInt64 = 0
     
+    var realm: Realm?
+    
     public init?(
         databaseStorageDirectory: String,
         databaseFileName: String,
@@ -40,6 +56,15 @@ open class LS2DatabaseManager: NSObject {
         self.syncQueue = DispatchQueue(label: "\(queueStorageDirectory)/UploadQueue")
         
         self.credentialStore = credentialStore
+        
+        var fileUUID: UUID! = nil
+        if let uuid = self.credentialStore.get(key: LS2DatabaseManager.kFileUUID) as? NSUUID {
+            fileUUID = uuid as UUID
+        }
+        else {
+            fileUUID = UUID()
+            self.credentialStore.set(value: fileUUID as NSUUID, key: LS2DatabaseManager.kFileUUID)
+        }
         
         self.encryptionEnabled = encrypted
         if encrypted {
@@ -64,7 +89,7 @@ open class LS2DatabaseManager: NSObject {
             return nil
         }
         
-        let finalDatabaseDirectory = documentsPath.appending("/\(databaseStorageDirectory)")
+        let finalDatabaseDirectory = documentsPath.appending("/\(databaseStorageDirectory)/\(fileUUID)")
         var isDirectory : ObjCBool = false
         if FileManager.default.fileExists(atPath: finalDatabaseDirectory, isDirectory: &isDirectory) {
             
@@ -97,12 +122,21 @@ open class LS2DatabaseManager: NSObject {
             print(error.localizedDescription);
         }
 //
-        let finalDatabaseFilePath = documentsPath.appending("/\(databaseStorageDirectory)/\(databaseFileName)")
+        let finalDatabaseFilePath = finalDatabaseDirectory.appending("/\(databaseFileName)")
         self.realmFile = URL(fileURLWithPath: finalDatabaseFilePath)
         
         super.init()
         
-        self.testRealmFileSettings()
+        self.instantiateRealm { (realm, error) in
+            
+            if realm == nil || error != nil {
+                assertionFailure()
+            }
+            
+            self.realm = realm
+            self.testRealmFileSettings()
+            
+        }
         
     }
     
@@ -155,63 +189,80 @@ open class LS2DatabaseManager: NSObject {
             
             try self.datapointQueue.clear()
             
-            self.getRealm(queue: .main) { (realm, error) in
+            assert(self.realm != nil)
+            self.realm!.invalidate()
+            self.realm = nil
+            
+            try autoreleasepool {
+                let configuration = self.realmConfig
+                let realm = try Realm(configuration: configuration)
                 
-                if error != nil {
-                    completion(error)
+                try realm.write {
+                    realm.deleteAll()
                 }
-                
-                guard let realm = realm else {
-                    fatalError("Could not get realm")
-                    completion(nil)
-                }
-                
-                do {
-                    
-                    try realm.write {
-                        realm.deleteAll()
-                    }
-                    
-                    try FileManager.default.removeItem(at: self.realmFile)
-                    self.credentialStore.set(value: nil, key: LS2DatabaseManager.kDatabaseKey)
-                    
-                    completion(nil)
-                    
-                }
-                catch let error {
-                    fatalError("Could not remove realm")
-                    completion(error)
-                }
-                
-                
                 
             }
+            
+            try FileManager.default.removeItem(at: self.realmFile)
+            self.credentialStore.set(value: nil, key: LS2DatabaseManager.kDatabaseKey)
+            self.credentialStore.set(value: nil, key: LS2DatabaseManager.kFileUUID)
+            
+            completion(nil)
 
         } catch let error {
             completion(error)
         }
         
     }
-
-    public func getRealm(queue: DispatchQueue, completion: @escaping (Realm?, Error?) -> Void) {
-        
-        self.testRealmFileSettings()
-        
-        
-        
-        let configuration = Realm.Configuration(
+    
+    var realmConfig: Realm.Configuration {
+        return Realm.Configuration(
             fileURL: self.realmFile,
             inMemoryIdentifier: nil,
             syncConfiguration: nil,
-            encryptionKey: self.encryptionEnabled ? (self.credentialStore.get(key: LS2DatabaseManager.kDatabaseKey) as? NSData) as! Data: nil,
+            encryptionKey: self.encryptionEnabled ? (self.credentialStore.get(key: LS2DatabaseManager.kDatabaseKey) as? NSData)! as Data: nil,
             readOnly: false,
             schemaVersion: self.schemaVersion,
             migrationBlock: nil,
             deleteRealmIfMigrationNeeded: false,
             shouldCompactOnLaunch: nil,
             objectTypes: nil)
+    }
+    
+    func instantiateRealm(completion: @escaping (Realm?, Error?) -> Void) {
         
-        Realm.asyncOpen(configuration: configuration, callbackQueue: queue, callback: completion)
+        self.testRealmFileSettings()
+        
+        let configuration = self.realmConfig
+        
+        Realm.asyncOpen(configuration: configuration, callbackQueue: .main, callback: completion)
+    }
+
+//    public func getRealm(queue: DispatchQueue, completion: @escaping (Realm?, Error?) -> Void) {
+//
+//        self.testRealmFileSettings()
+//
+//        let configuration = Realm.Configuration(
+//            fileURL: self.realmFile,
+//            inMemoryIdentifier: nil,
+//            syncConfiguration: nil,
+//            encryptionKey: self.encryptionEnabled ? (self.credentialStore.get(key: LS2DatabaseManager.kDatabaseKey) as? NSData) as! Data: nil,
+//            readOnly: false,
+//            schemaVersion: self.schemaVersion,
+//            migrationBlock: nil,
+//            deleteRealmIfMigrationNeeded: false,
+//            shouldCompactOnLaunch: nil,
+//            objectTypes: nil)
+//
+//        Realm.asyncOpen(configuration: configuration, callbackQueue: queue, callback: completion)
+//    }
+    
+    public func getRealm() -> LS2RealmProxy? {
+        guard let realm = self.realm else {
+            return nil
+        }
+        
+        return LS2RealmProxy(realm: realm)
     }
 
     public func addDatapoint(datapoint: LS2RealmDatapoint, completion: @escaping ((Error?) -> ())) {
@@ -259,37 +310,41 @@ open class LS2DatabaseManager: NSObject {
                     self.isSyncing = true
 //                    self.logger?.log("posting datapoint with id: \(datapoint.header.id)")
                     
-                    self.getRealm(queue: self.syncQueue, completion: { (realm, error) in
+                    DispatchQueue.main.async {
                         
-                        guard let realm = realm,
-                            error == nil else {
-                                debugPrint(error!)
-                                fatalError("what's the deal with realm errors?")
-                                self.isSyncing = false
+                        autoreleasepool {
+                            guard let realm = self.realm else {
+                                self.syncQueue.async {
+                                    self.isSyncing = false
+                                }
                                 return
-                        }
-
-                        do {
-                            try realm.write {
-                                
-                                realm.add(elementPairs.map { $0.element })
-                                
                             }
                             
-                            try elementPairs.forEach({ (pair) in
-                                try self.datapointQueue.removeGlossyElement(element: pair)
-                            })
-                        }
-                        catch let error {
-                            debugPrint(error)
-                            fatalError("what's the deal with realm / datapoint queue errors?")
-                            self.isSyncing = false
-                            return
+                            do {
+                                
+                                try realm.write {
+                                    realm.add(elementPairs.map { $0.element })
+                                }
+                                
+                                try elementPairs.forEach({ (pair) in
+                                    try self.datapointQueue.removeGlossyElement(element: pair)
+                                })
+                            }
+                            catch let error {
+                                debugPrint(error)
+                                fatalError("what's the deal with realm / datapoint queue errors?")
+                                self.syncQueue.async {
+                                    self.isSyncing = false
+                                }
+                                return
+                            }
+                            
+                            self.syncQueue.async {
+                                self.isSyncing = false
+                            }
                         }
                         
-                        self.isSyncing = false
-                        
-                    })
+                    }
                     
                 }
                     
