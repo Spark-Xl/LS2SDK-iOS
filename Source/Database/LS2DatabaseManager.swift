@@ -32,40 +32,52 @@ open class LS2DatabaseManager: NSObject {
     
     let datapointQueue: RSGlossyQueue<LS2RealmDatapoint>
     
-    var logger: LS2Logger?
+    static var TAG = "LS2DatabaseManager"
+    public var logger: RSLogger?
     
     var syncQueue: DispatchQueue!
     var isSyncing: Bool = false
     
     let realmFile: URL
     let encryptionEnabled: Bool
+    let fileProtection: FileProtectionType
 //    let realmEncryptionKey: Data?
     let schemaVersion: UInt64 = 0
     
     var realm: Realm?
     
+    var protectedDataAvaialbleObserver: NSObjectProtocol!
+    
+    
+    //Also, specify data protection setting
     public init?(
         databaseStorageDirectory: String,
         databaseFileName: String,
         queueStorageDirectory: String,
         encrypted: Bool,
-        credentialStore: RSCredentialsStore
+        credentialStore: RSCredentialsStore,
+        fileProtection: FileProtectionType,
+        logger: RSLogger? = nil
         ) {
+        
+        self.logger = logger
         
         self.datapointQueue = RSGlossyQueue(directoryName: queueStorageDirectory, allowedClasses: [NSDictionary.self, NSArray.self])!
         self.syncQueue = DispatchQueue(label: "\(queueStorageDirectory)/UploadQueue")
         
         self.credentialStore = credentialStore
         
-        var fileUUID: UUID! = nil
-        if let uuid = self.credentialStore.get(key: LS2DatabaseManager.kFileUUID) as? NSUUID {
-            fileUUID = uuid as UUID
-        }
-        else {
-            fileUUID = UUID()
-            self.credentialStore.set(value: fileUUID as NSUUID, key: LS2DatabaseManager.kFileUUID)
-        }
-        
+        let fileUUID: UUID = {
+            if let uuid = credentialStore.get(key: LS2DatabaseManager.kFileUUID) as? NSUUID {
+                return uuid as UUID
+            }
+            else {
+                let uuid = UUID()
+                credentialStore.set(value: uuid as NSUUID, key: LS2DatabaseManager.kFileUUID)
+                return uuid
+            }
+        }()
+
         self.encryptionEnabled = encrypted
         if encrypted {
             //check to see if a db key has been set
@@ -86,10 +98,11 @@ open class LS2DatabaseManager: NSObject {
         
         
         guard let documentsPath = NSSearchPathForDirectoriesInDomains(FileManager.SearchPathDirectory.documentDirectory, FileManager.SearchPathDomainMask.userDomainMask, true).first else {
+            self.logger?.log(tag: LS2DatabaseManager.TAG, level: .warn, message: "Database failed initialization")
             return nil
         }
         
-        let finalDatabaseDirectory = documentsPath.appending("/\(databaseStorageDirectory)/\(fileUUID)")
+        let finalDatabaseDirectory = documentsPath.appending("/\(databaseStorageDirectory)/\(fileUUID.uuidString)")
         var isDirectory : ObjCBool = false
         if FileManager.default.fileExists(atPath: finalDatabaseDirectory, isDirectory: &isDirectory) {
             
@@ -98,11 +111,12 @@ open class LS2DatabaseManager: NSObject {
                 
             }
             else {
-                
+                self.logger?.log(tag: LS2DatabaseManager.TAG, level: .warn, message: "File found at database directory. Removing...")
                 do {
                     try FileManager.default.removeItem(atPath: finalDatabaseDirectory)
                 } catch let error as NSError {
                     //TODO: handle this
+                    self.logger?.log(tag: LS2DatabaseManager.TAG, level: .error, message: "An error occurred removing the file: \(error)")
                     print(error.localizedDescription);
                 }
             }
@@ -110,8 +124,9 @@ open class LS2DatabaseManager: NSObject {
         }
         
         do {
-            
-            try FileManager.default.createDirectory(atPath: finalDatabaseDirectory, withIntermediateDirectories: true, attributes: [.protectionKey: FileProtectionType.complete])
+            self.logger?.log(tag: LS2DatabaseManager.TAG, level: .info, message: "Configuring database directory: \(finalDatabaseDirectory)")
+            self.fileProtection = fileProtection
+            try FileManager.default.createDirectory(atPath: finalDatabaseDirectory, withIntermediateDirectories: true, attributes: [.protectionKey: fileProtection])
             var url: URL = URL(fileURLWithPath: finalDatabaseDirectory)
             var resourceValues: URLResourceValues = URLResourceValues()
             resourceValues.isExcludedFromBackup = true
@@ -119,36 +134,84 @@ open class LS2DatabaseManager: NSObject {
             
         } catch let error as NSError {
             //TODO: Handle this
+            self.logger?.log(tag: LS2DatabaseManager.TAG, level: .error, message: "An error occurred configuring the database directory: \(error)")
             print(error.localizedDescription);
         }
 //
         let finalDatabaseFilePath = finalDatabaseDirectory.appending("/\(databaseFileName)")
+        self.logger?.log(tag: LS2DatabaseManager.TAG, level: .info, message: "The final database file is: \(finalDatabaseFilePath)")
         self.realmFile = URL(fileURLWithPath: finalDatabaseFilePath)
         
         super.init()
         
-        self.instantiateRealm { (realm, error) in
-            
-            if realm == nil || error != nil {
-                assertionFailure()
-            }
-            
-            self.realm = realm
-            self.testRealmFileSettings()
-            
+//        self.instantiateRealm { (realm, error) in
+//
+//            if realm == nil || error != nil {
+//                assertionFailure()
+//            }
+//
+//            self.realm = realm
+//            self.testRealmFileSettings()
+//
+//        }
+
+        
+        // this failing is not necessarily an issue, it's probably due to not being able to open the file
+        // this means that we should still allow the queue to accept datapoints
+        // we still need to figure out a way to instantiate the realm db when someone asks for a ref to the realm db if not instantiated
+        self.instantiateRealm()
+        
+        if self.realm != nil {
+            self.sync()
         }
         
+        self.protectedDataAvaialbleObserver = NotificationCenter.default.addObserver(forName: .UIApplicationProtectedDataDidBecomeAvailable, object: nil, queue: nil) { [weak self](notification) in
+            
+            guard let strongSelf = self else {
+                return
+            }
+            
+            strongSelf.logger?.log(tag: LS2DatabaseManager.TAG, level: .info, message: "Protected data available. Attempting to sync")
+            
+            if strongSelf.realm == nil {
+                strongSelf.logger?.log(tag: LS2DatabaseManager.TAG, level: .warn, message: "Realm is nil, attempting to instantitate it")
+                strongSelf.instantiateRealm()
+            }
+            
+            strongSelf.sync()
+        }
+        
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self.protectedDataAvaialbleObserver)
+    }
+    
+    @discardableResult
+    func instantiateRealm() -> Realm? {
+        do {
+            self.logger?.log(tag: LS2DatabaseManager.TAG, level: .info, message: "Instantiating the realm instance")
+            let configuration = self.realmConfig
+            self.realm = try Realm(configuration: configuration)
+            self.testRealmFileSettings()
+            return self.realm
+        }
+        catch let error {
+            self.logger?.log(tag: LS2DatabaseManager.TAG, level: .error, message: "An error occurred instantiating the realm instance: \(error)")
+            return nil
+        }
     }
     
     func expectedFileProtection() -> FileProtectionType {
         #if targetEnvironment(simulator)
         return .completeUntilFirstUserAuthentication
         #else
-        return .complete
+        return self.fileProtection
         #endif
     }
     
     func testRealmFileSettings() {
+        self.logger?.log(tag: LS2DatabaseManager.TAG, level: .info, message: "Testing realm settings")
         //test that directory holding realm file does not back stuff up
         let realmDirectory = self.realmFile.deletingLastPathComponent()
         do {
@@ -156,6 +219,7 @@ open class LS2DatabaseManager: NSObject {
             assert(resourceValues.isExcludedFromBackup == true)
         }
         catch _ {
+            self.logger?.log(tag: LS2DatabaseManager.TAG, level: .error, message: "The realm directory is NOT excluded fromn backup")
             assertionFailure()
         }
         
@@ -166,26 +230,36 @@ open class LS2DatabaseManager: NSObject {
                 let attributes = try FileManager.default.attributesOfItem(atPath: self.realmFile.path)
                 if let protectionKey = attributes[.protectionKey] as? FileProtectionType {
                     let expectedFileProtection = self.expectedFileProtection()
+                    if protectionKey != expectedFileProtection {
+                        self.logger?.log(tag: LS2DatabaseManager.TAG, level: .error, message: "The protection key \(protectionKey.rawValue) is not the configured key \(expectedFileProtection.rawValue)")
+                    }
+                    
                     assert(protectionKey == expectedFileProtection)
                 }
                 else {
+                    self.logger?.log(tag: LS2DatabaseManager.TAG, level: .error, message: "Unable to query the file protection key")
                     assertionFailure()
                 }
             }
-            catch _ {
+            catch let error {
+                self.logger?.log(tag: LS2DatabaseManager.TAG, level: .error, message: "An error occurred when testing the file protection \(error)")
                 assertionFailure()
             }
         }
         
-        if self.encryptionEnabled {
-            assert(self.credentialStore.get(key: LS2DatabaseManager.kDatabaseKey) != nil)
+        if self.encryptionEnabled && self.credentialStore.get(key: LS2DatabaseManager.kDatabaseKey) == nil {
+            self.logger?.log(tag: LS2DatabaseManager.TAG, level: .error, message: "Encryption is misconfigured")
+            assertionFailure()
         }
         
+        self.logger?.log(tag: LS2DatabaseManager.TAG, level: .info, message: "Realm is configured properly")
     }
     
     public func deleteRealm(completion: @escaping ((Error?) -> ())) {
         
         do {
+            
+            self.logger?.log(tag: LS2DatabaseManager.TAG, level: .info, message: "Deleting realm")
             
             try self.datapointQueue.clear()
             
@@ -229,14 +303,14 @@ open class LS2DatabaseManager: NSObject {
             objectTypes: nil)
     }
     
-    func instantiateRealm(completion: @escaping (Realm?, Error?) -> Void) {
-        
-        self.testRealmFileSettings()
-        
-        let configuration = self.realmConfig
-        
-        Realm.asyncOpen(configuration: configuration, callbackQueue: .main, callback: completion)
-    }
+//    func instantiateRealm(completion: @escaping (Realm?, Error?) -> Void) {
+//
+//        self.testRealmFileSettings()
+//
+//        let configuration = self.realmConfig
+//
+//        Realm.asyncOpen(configuration: configuration, callbackQueue: .main, callback: completion)
+//    }
 
 //    public func getRealm(queue: DispatchQueue, completion: @escaping (Realm?, Error?) -> Void) {
 //
@@ -258,24 +332,36 @@ open class LS2DatabaseManager: NSObject {
 //    }
     
     public func getRealm() -> LS2RealmProxy? {
-        guard let realm = self.realm else {
+        
+        //if realm exists, return proxy
+        //else, try to instantitae it (note, instantitate saves ref to realm)
+        //otherwise, return nil
+        
+        if let realm = self.realm {
+            return LS2RealmProxy(realm: realm)
+        }
+        else if let realm = self.instantiateRealm() {
+            return LS2RealmProxy(realm: realm)
+        }
+        else {
             return nil
         }
-        
-        return LS2RealmProxy(realm: realm)
     }
 
     public func addDatapoint(datapoint: LS2RealmDatapoint, completion: @escaping ((Error?) -> ())) {
         
         do {
-            
+            self.logger?.log(tag: LS2DatabaseManager.TAG, level: .info, message: "Adding a datapoint to queue")
             try self.datapointQueue.addGlossyElement(element: datapoint)
             
         } catch let error {
+            self.logger?.log(tag: LS2DatabaseManager.TAG, level: .error, message: "An error occurred adding a datapoint to the queue \(error)")
             completion(error)
             return
         }
         
+        //we should really only try this if we know the phone is unlocked
+        self.logger?.log(tag: LS2DatabaseManager.TAG, level: .info, message: "Added datapoint to queue, syncing")
         self.sync()
         completion(nil)
 
@@ -283,8 +369,10 @@ open class LS2DatabaseManager: NSObject {
     
     public func addDatapoint(datapointConvertible: LS2DatapointConvertible, completion: @escaping ((Error?) -> ())) {
         
+        self.logger?.log(tag: LS2DatabaseManager.TAG, level: .info, message: "Converting datapoint")
         //this will always pass, but need to wrap in concrete datapoint type
         guard let realmDatapoint =  datapointConvertible.toDatapoint(builder: LS2RealmDatapoint.self) as? LS2RealmDatapoint else {
+            self.logger?.log(tag: LS2DatabaseManager.TAG, level: .error, message: "Datapoint conversion failed")
             return
         }
         
@@ -294,50 +382,82 @@ open class LS2DatabaseManager: NSObject {
     
     private func sync() {
         
+        self.logger?.log(tag: LS2DatabaseManager.TAG, level: .info, message: "Starting sync")
+        
+        //this is possibly ok
+//        if self.realm == nil {
+//            self.logger?.log(tag: LS2DatabaseManager.TAG, level: .warn, message: "Realm is nil, attempting to instantitate it")
+//            guard _ self.instantiateRealm() else {
+//                self.logger?.log(tag: LS2DatabaseManager.TAG, level: .warn, message: "Realm is nil, returning")
+//                return
+//            }
+//        }
+        
+        //this is possibly ok, data has already been added to datapoints, will be sync'd next time the app is open
+        guard self.realm != nil else {
+            self.logger?.log(tag: LS2DatabaseManager.TAG, level: .warn, message: "Realm is nil, returning")
+            return
+        }
+        
         self.syncQueue.async {
             
             let queue = self.datapointQueue
             guard !queue.isEmpty,
                 !self.isSyncing else {
+                    self.logger?.log(tag: LS2DatabaseManager.TAG, level: .info, message: "Queue is empty or sync is ongoing")
                     return
             }
 
             do {
                 
                 let elementPairs = try self.datapointQueue.getGlossyElements()
+                self.logger?.log(tag: LS2DatabaseManager.TAG, level: .info, message: "There are \(elementPairs.count) datapoints to sync")
                 if elementPairs.count > 0 {
                     
                     self.isSyncing = true
 //                    self.logger?.log("posting datapoint with id: \(datapoint.header.id)")
+                    self.logger?.log(tag: LS2DatabaseManager.TAG, level: .info, message: "Syncing \(elementPairs.count) datapoints")
                     
                     DispatchQueue.main.async {
                         
                         autoreleasepool {
                             guard let realm = self.realm else {
+                                self.logger?.log(tag: LS2DatabaseManager.TAG, level: .error, message: "Syncing failed, could not get realm handle")
+                                self.syncQueue.async {
+                                    self.isSyncing = false
+                                }
+                                
+                                return
+                            }
+                            
+                            do {
+                                try realm.write {
+                                    realm.add(elementPairs.map { $0.element })
+                                }
+                            }
+                            catch let error {
+                                self.logger?.log(tag: LS2DatabaseManager.TAG, level: .error, message: "A realm write failed with error \(error)")
                                 self.syncQueue.async {
                                     self.isSyncing = false
                                 }
                                 return
                             }
                             
+                            
                             do {
-                                
-                                try realm.write {
-                                    realm.add(elementPairs.map { $0.element })
-                                }
-                                
                                 try elementPairs.forEach({ (pair) in
                                     try self.datapointQueue.removeGlossyElement(element: pair)
                                 })
                             }
                             catch let error {
-                                debugPrint(error)
-                                fatalError("what's the deal with realm / datapoint queue errors?")
+                                self.logger?.log(tag: LS2DatabaseManager.TAG, level: .error, message: "A failure occurred removing a datapoint from the queue with \(error)")
                                 self.syncQueue.async {
                                     self.isSyncing = false
                                 }
                                 return
                             }
+                            
+                            self.logger?.log(tag: LS2DatabaseManager.TAG, level: .info, message: "Syncing successful")
                             
                             self.syncQueue.async {
                                 self.isSyncing = false
@@ -349,13 +469,15 @@ open class LS2DatabaseManager: NSObject {
                 }
                     
                 else {
-                    self.logger?.log("either we couldnt load a valid datapoint or there is no token")
+//                    self.logger?.log("There are no datapoints to sync")
+                    self.logger?.log(tag: LS2DatabaseManager.TAG, level: .info, message: "There are no datapoints to sync")
                 }
                 
                 
             } catch let error {
                 //assume file system encryption error when tryong to read
-                self.logger?.log("secure queue threw when trying to get elements: \(error)")
+//                self.logger?.log("secure queue threw when trying to get elements: \(error)")
+                self.logger?.log(tag: LS2DatabaseManager.TAG, level: .error, message: "Secure queue threw when trying to get elements: \(error)")
                 
             }
             

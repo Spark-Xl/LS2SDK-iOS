@@ -23,10 +23,6 @@ import UIKit
 import Alamofire
 import ResearchSuiteExtensions
 
-public protocol LS2Logger {
-    func log(_ debugString: String)
-}
-
 public protocol LS2ManagerDelegate: class {
     func onInvalidToken(manager: LS2Manager) -> Bool
 }
@@ -52,14 +48,15 @@ open class LS2Manager: NSObject {
     
     var protectedDataAvaialbleObserver: NSObjectProtocol!
     
-    var logger: LS2Logger?
+    static var TAG = "LS2Manager"
+    public var logger: RSLogger?
     public weak var delegate: LS2ManagerDelegate?
     
     public init?(
         baseURL: String,
         queueStorageDirectory: String,
         store: RSCredentialsStore,
-        logger: LS2Logger? = nil,
+        logger: RSLogger? = nil,
         serverTrustPolicyManager: ServerTrustPolicyManager? = nil
         ) {
         
@@ -100,7 +97,7 @@ open class LS2Manager: NSObject {
                 do {
                     try startUploading()
                 } catch let error {
-                    self?.logger?.log("an error occurred when first trying to upload \(error)")
+                    self?.logger?.log(tag: LS2Manager.TAG, level: .error, message: "an error occurred when first trying to upload \(error)")
                 }
             }
         }
@@ -114,7 +111,7 @@ open class LS2Manager: NSObject {
             do {
                 try startUploading()
             } catch let error as NSError {
-                self?.logger?.log("error occurred when starting upload after device unlock: \(error.localizedDescription)")
+                self?.logger?.log(tag: LS2Manager.TAG, level: .error, message: "error occurred when starting upload after device unlock: \(error.localizedDescription)")
             }
             
         }
@@ -210,7 +207,7 @@ open class LS2Manager: NSObject {
                                 if shouldLogOut { self.signOut(completion: { (error) in }) }
                             }
                             else {
-                                self.logger?.log("invalid access token: clearing")
+                                self.logger?.log(tag: LS2Manager.TAG, level: .warn, message: "invalid access token: clearing")
                                 self.signOut(completion: { (error) in })
                             }
                             
@@ -413,7 +410,7 @@ open class LS2Manager: NSObject {
 
                     let datapoint: LS2Datapoint = elementPair.element
                     self.isUploading = true
-                    self.logger?.log("posting datapoint with id: \(datapoint.header?.id)")
+                    self.logger?.log(tag: LS2Manager.TAG, level: .info, message: "posting datapoint with id: \(String(describing: datapoint.header?.id))")
                     
                     self.client.postDatapoint(datapoint: datapoint, token: token, completion: { (success, error) in
                         
@@ -425,13 +422,13 @@ open class LS2Manager: NSObject {
                 }
                 
                 else {
-                    self.logger?.log("either we couldnt load a valid datapoint or there is no token")
+                    self.logger?.log(tag: LS2Manager.TAG, level: .info, message: "either we couldnt load a valid datapoint or there is no token")
                 }
                 
                 
             } catch let error {
                 //assume file system encryption error when tryong to read
-                self.logger?.log("secure queue threw when trying to get first element: \(error)")
+                self.logger?.log(tag: LS2Manager.TAG, level: .error, message: "secure queue threw when trying to get first element: \(error)")
                 
                 //try uploading datapoint from memory
                 self.upload(fromMemory: true)
@@ -445,7 +442,7 @@ open class LS2Manager: NSObject {
     private func processUploadResponse(element: RSGlossyQueue<LS2ConcreteDatapoint>.RSGlossyQueueElement, fromMemory: Bool, success: Bool, error: Error?) {
         
         if let err = error {
-            self.logger?.log("Got error while posting datapoint: \(error.debugDescription)")
+            self.logger?.log(tag: LS2Manager.TAG, level: .error, message: "Got error while posting datapoint: \(error.debugDescription)")
             //should we retry here?
             // and if so, under what conditions
             
@@ -461,7 +458,7 @@ open class LS2Manager: NSObject {
                     if shouldLogOut { self.signOut(completion: { (error) in }) }
                 }
                 else {
-                    self.logger?.log("invalid access token: clearing")
+                    self.logger?.log(tag: LS2Manager.TAG, level: .info, message: "invalid access token: clearing")
                     self.signOut(completion: { (error) in })
                 }
                 
@@ -470,14 +467,14 @@ open class LS2Manager: NSObject {
             //we can remove it from the queue
             case .some(LS2ClientError.dataPointConflict):
                 
-                self.logger?.log("datapoint conflict: removing")
+                self.logger?.log(tag: LS2Manager.TAG, level: .info, message: "datapoint conflict: removing")
                 
                 do {
                     try self.datapointQueue.removeGlossyElement(element: element)
                     
                 } catch let error {
-                    //we tried to delete,
-                    self.logger?.log("An error occured when trying to remove the datapoint \(error)")
+                    //we tried to delete
+                    self.logger?.log(tag: LS2Manager.TAG, level: .error, message: "An error occured when trying to remove the datapoint \(error)")
                 }
                 
                 self.upload(fromMemory: fromMemory)
@@ -487,21 +484,21 @@ open class LS2Manager: NSObject {
             //we can remove it from the queue
             case .some(LS2ClientError.invalidDatapoint):
                 
-                self.logger?.log("datapoint invalid: removing")
+                self.logger?.log(tag: LS2Manager.TAG, level: .info, message: "datapoint invalid: removing")
                 
                 do {
                     try self.datapointQueue.removeGlossyElement(element: element)
                     
                 } catch let error {
                     //we tried to delete,
-                    self.logger?.log("An error occurred when trying to remove the element \(error)")
+                    self.logger?.log(tag: LS2Manager.TAG, level: .error, message: "An error occurred when trying to remove the element \(error)")
                 }
                 
                 self.upload(fromMemory: fromMemory)
                 return
                 
             case .some(LS2ClientError.badGatewayError):
-                self.logger?.log("bad gateway")
+                self.logger?.log(tag: LS2Manager.TAG, level: .warn, message: "bad gateway")
                 return
                 
             default:
@@ -509,24 +506,24 @@ open class LS2Manager: NSObject {
                 let nsError = err as NSError
                 switch (nsError.code) {
                 case NSURLErrorNetworkConnectionLost:
-                    self.logger?.log("We have an internet connecction, but cannot connect to the server. Is it down?")
+                    self.logger?.log(tag: LS2Manager.TAG, level: .warn, message: "We have an internet connecction, but cannot connect to the server. Is it down?")
                     return
                     
                 default:
-                    self.logger?.log("other error: \(nsError)")
+                    self.logger?.log(tag: LS2Manager.TAG, level: .error, message: "other error: \(nsError)")
                     break
                 }
             }
             
         } else if success {
             //remove from queue
-            self.logger?.log("success: removing data point")
+            self.logger?.log(tag: LS2Manager.TAG, level: .info, message: "success: removing data point")
             do {
                 try self.datapointQueue.removeGlossyElement(element: element)
                 
             } catch let error {
                 //we tried to delete,
-                self.logger?.log("An error occurred trying to remove the element \(error)")
+                self.logger?.log(tag: LS2Manager.TAG, level: .error, message: "An error occurred when trying to remove the element \(error)")
             }
             
             self.upload(fromMemory: fromMemory)
