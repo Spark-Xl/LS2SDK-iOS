@@ -93,12 +93,15 @@ open class LS2AutoResult: RSRPIntermediateResult, RSRPFrontEndTransformer {
         guard let resultDict = LS2AutoResult.extractResults(parameters: parameters, forSerialization: true) else {
             return nil
         }
+        
+        let metadata: JSON? = "metadata" <~~ parameters
 
         let result = LS2AutoResult(
             uuid: UUID(),
             taskIdentifier: taskIdentifier,
             taskRunUUID: taskRunUUID,
             schema: schema,
+            metadata: metadata,
             resultDict: resultDict
         )
         
@@ -111,17 +114,20 @@ open class LS2AutoResult: RSRPIntermediateResult, RSRPFrontEndTransformer {
     
     public let schema: LS2Schema
     public let resultDict: JSON
+    public let metadata: JSON?
     
     public init(
         uuid: UUID,
         taskIdentifier: String,
         taskRunUUID: UUID,
         schema: LS2Schema,
+        metadata: JSON? = nil,
         resultDict: JSON
         ) {
         
         self.schema = schema
         self.resultDict = resultDict
+        self.metadata = metadata
         
         super.init(
             type: "LS2AutoResult",
@@ -139,7 +145,7 @@ extension LS2AutoResult: LS2DatapointConvertible {
         let creationDate = self.startDate ?? Date()
         let acquisitionSource = LS2AcquisitionProvenance(sourceName: sourceName, sourceCreationDateTime: creationDate, modality: .SelfReported)
         
-        let header = LS2DatapointHeader(id: self.uuid, schemaID: self.schema, acquisitionProvenance: acquisitionSource)
+        let header = LS2DatapointHeader(id: self.uuid, schemaID: self.schema, acquisitionProvenance: acquisitionSource, metadata: self.metadata)
         return builder.createDatapoint(header: header, body: self.resultDict)
         
     }

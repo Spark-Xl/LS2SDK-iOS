@@ -366,3 +366,7 @@ public protocol LS2DatapointConvertible {
     func toDatapoint(builder: LS2DatapointBuilder.Type) -> LS2Datapoint?
 }
 
+public protocol LS2DatapointDecodable {
+    init?(datapoint: LS2Datapoint)
+}
+

@@ -38,7 +38,7 @@ open class LS2DatabaseManager: NSObject {
     var syncQueue: DispatchQueue!
     var isSyncing: Bool = false
     
-    let realmFile: URL
+    open let realmFile: URL
     let encryptionEnabled: Bool
     let fileProtection: FileProtectionType
 //    let realmEncryptionKey: Data?
@@ -237,8 +237,12 @@ open class LS2DatabaseManager: NSObject {
                     assert(protectionKey == expectedFileProtection)
                 }
                 else {
+                    #if targetEnvironment(simulator)
+                    #else
                     self.logger?.log(tag: LS2DatabaseManager.TAG, level: .error, message: "Unable to query the file protection key")
                     assertionFailure()
+                    #endif
+                    
                 }
             }
             catch let error {
