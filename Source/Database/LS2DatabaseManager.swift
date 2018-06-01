@@ -8,6 +8,7 @@
 import UIKit
 import RealmSwift
 import ResearchSuiteExtensions
+import Gloss
 
 open class LS2DatabaseManager: NSObject {
     
@@ -482,6 +483,49 @@ open class LS2DatabaseManager: NSObject {
                 //assume file system encryption error when tryong to read
 //                self.logger?.log("secure queue threw when trying to get elements: \(error)")
                 self.logger?.log(tag: LS2DatabaseManager.TAG, level: .error, message: "Secure queue threw when trying to get elements: \(error)")
+                
+            }
+            
+        }
+        
+    }
+    
+    public func exportDatapoints(predicate: NSPredicate? = nil, completion: @escaping (Data?, Error?)->() ) {
+        
+        DispatchQueue.main.async {
+        
+            autoreleasepool {
+                guard let realm = self.realm else {
+                    self.logger?.log(tag: LS2DatabaseManager.TAG, level: .error, message: "Export failed, could not get realm handle")
+                    completion(nil, nil)
+                    return
+                }
+                
+                let datapoints: Results<LS2RealmDatapoint> = {
+                    if let predicate = predicate {
+                        return realm.objects(LS2RealmDatapoint.self).filter(predicate)
+                    }
+                    else {
+                        return realm.objects(LS2RealmDatapoint.self)
+                    }
+                }()
+                
+                let datapointsJSONArray: [JSON] = datapoints.compactMap({ (datapoint) -> JSON? in
+                    return datapoint.toJSON()
+                })
+                
+                if JSONSerialization.isValidJSONObject(datapointsJSONArray) {
+                    do {
+                        let data = try JSONSerialization.data(withJSONObject: datapointsJSONArray, options: [.prettyPrinted])
+                        completion(data, nil)
+                    }
+                    catch let error {
+                        completion(nil, error)
+                    }
+                }
+                else {
+                    completion(nil, nil)
+                }
                 
             }
             
