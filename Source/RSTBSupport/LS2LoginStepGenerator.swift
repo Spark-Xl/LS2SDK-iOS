@@ -38,7 +38,7 @@ open class LS2LoginStepGenerator: RSTBBaseStepGenerator {
     open func generateStep(type: String, jsonObject: JSON, helper: RSTBTaskBuilderHelper) -> ORKStep? {
         
         guard let customStepDescriptor = helper.getCustomStepDescriptor(forJsonObject: jsonObject),
-            let managerProvider = helper.stateHelper as? LS2ManagerProvider else {
+            let manager = helper.stateHelper?.objectInState(forKey: "ls2Manager") as? LS2Manager else {
                 return nil
         }
         
@@ -46,7 +46,7 @@ open class LS2LoginStepGenerator: RSTBBaseStepGenerator {
             identifier: customStepDescriptor.identifier,
             title: customStepDescriptor.title,
             text: customStepDescriptor.text,
-            ls2Manager: managerProvider.getManager()
+            ls2Manager: manager
         )
         
         step.isOptional = false

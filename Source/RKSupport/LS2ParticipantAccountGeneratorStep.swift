@@ -31,28 +31,26 @@ open class LS2ParticipantAccountGeneratorStep: RSStep {
     public var buttonText: String? = nil
     public var viewControllerDidLoad: ((UIViewController) -> ())?
     
+    public let manager: LS2Manager
+    public let participantAccountGeneratorCredentials: LS2ParticipantAccountGeneratorCredentials
+    
     public init(identifier: String,
                 title: String? = nil,
                 text: String? = nil,
                 buttonText: String? = nil,
-                ls2Provider: LS2ManagerProvider?) {
-        
-        let didLoad: (UIViewController) -> Void = { viewController in
-            
-            if let vc = viewController as? LS2ParticipantAccountGeneratorStepViewController {
-                vc.ls2Provider = ls2Provider
-            }
-            
-        }
+                manager: LS2Manager,
+                participantAccountGeneratorCredentials: LS2ParticipantAccountGeneratorCredentials) {
         
         let title = title ?? "Log in"
         let text = text ?? "Please log in"
+        
+        self.manager = manager
+        self.participantAccountGeneratorCredentials = participantAccountGeneratorCredentials
         
         super.init(identifier: identifier)
         self.title = title
         self.text = text
         self.buttonText = buttonText
-        self.viewControllerDidLoad = didLoad
     }
     
     required public init(coder aDecoder: NSCoder) {

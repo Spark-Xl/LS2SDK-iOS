@@ -22,13 +22,14 @@
 import UIKit
 import Alamofire
 
-public struct LS2ParticipantAccountGeneratorCredentials {
+open class LS2ParticipantAccountGeneratorCredentials: NSObject {
     public let generatorId: String
     public let generatorPassword: String
     
     public init(generatorId: String, generatorPassword: String) {
         self.generatorId = generatorId
         self.generatorPassword = generatorPassword
+        super.init()
     }
 }
 

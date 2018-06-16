@@ -40,8 +40,9 @@ open class LS2ParticipantAccountGeneratorStepGenerator: RSTBBaseStepGenerator {
     open func generateStep(type: String, jsonObject: JSON, helper: RSTBTaskBuilderHelper) -> ORKStep? {
         
         guard let stepDescriptor = LS2ParticipantAccountGeneratorStepDescriptor(json:jsonObject),
-            let managerProvider = helper.stateHelper as? LS2ManagerProvider,
-            let stateHelper = helper.stateHelper else {
+            let stateHelper = helper.stateHelper,
+            let manager = stateHelper.objectInState(forKey: "ls2Manager") as? LS2Manager,
+            let participantAccountGeneratorCredentials = stateHelper.objectInState(forKey: "ls2ParticipantAccountCredentials") as? LS2ParticipantAccountGeneratorCredentials else {
                 return nil
         }
         
@@ -50,7 +51,8 @@ open class LS2ParticipantAccountGeneratorStepGenerator: RSTBBaseStepGenerator {
             title: stepDescriptor.title,
             text: stepDescriptor.text,
             buttonText: stepDescriptor.buttonText,
-            ls2Provider: managerProvider
+            manager: manager,
+            participantAccountGeneratorCredentials: participantAccountGeneratorCredentials
         )
         
         if let formattedTitle = stepDescriptor.formattedTitle {
