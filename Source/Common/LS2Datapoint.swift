@@ -276,7 +276,30 @@ public protocol LS2DatapointBuilder {
 //    }
 //}
 
-public struct LS2ConcreteDatapoint: LS2Datapoint, LS2DatapointBuilder {
+public struct LS2ConcreteDatapoint: LS2Datapoint, LS2DatapointBuilder, LS2DatapointConvertible, LS2DatapointDecodable {
+    
+    public init?(datapoint: LS2Datapoint) {
+        
+        guard let header = datapoint.header,
+            let body = datapoint.body else {
+                return nil
+        }
+        
+        self.header = header
+        self.body = body
+    }
+    
+    public func toDatapoint(builder: LS2DatapointBuilder.Type) -> LS2Datapoint? {
+        
+        guard let header = self.header,
+            let body = self.body else {
+                return nil
+        }
+        
+        return builder.createDatapoint(header: header, body: body)
+        
+    }
+    
     
     public static func createDatapoint(header: LS2DatapointHeader, body: JSON) -> LS2Datapoint? {
         return LS2ConcreteDatapoint(header: header, body: body)
