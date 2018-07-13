@@ -21,11 +21,11 @@ Pod::Spec.new do |s|
 TODO: Add long description of the pod here.
                        DESC
 
-  s.homepage         = 'https://github.com/CuriosityHealth/LS2SDK'
+  s.homepage         = 'https://github.com/CuriosityHealth/LS2SDK-iOS'
   # s.screenshots     = 'www.example.com/screenshots_1', 'www.example.com/screenshots_2'
   s.license          = { :type => 'Apache 2.0', :file => 'LICENSE' }
   s.author           = { 'jdkizer9' => 'jdkizer9@users.noreply.github.com' }
-  s.source           = { :git => 'https://github.com/CuriosityHealth/LS2SDK.git', :tag => s.version.to_s }
+  s.source           = { :git => 'https://github.com/CuriosityHealth/LS2SDK-iOS.git', :tag => s.version.to_s }
   # s.social_media_url = 'https://twitter.com/<TWITTER_USERNAME>'
 
   s.ios.deployment_target = '10.0'
