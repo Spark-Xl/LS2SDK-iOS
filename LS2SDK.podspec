@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'LS2SDK'
-  s.version          = '0.8.0'
+  s.version          = '0.9.0'
   s.summary          = 'A short description of LS2SDK.'
 
 # This description is used to generate tags and improve search results.
@@ -21,11 +21,11 @@ Pod::Spec.new do |s|
 TODO: Add long description of the pod here.
                        DESC
 
-  s.homepage         = 'https://github.com/jdkizer9/LS2SDK'
+  s.homepage         = 'https://github.com/CuriosityHealth/LS2SDK'
   # s.screenshots     = 'www.example.com/screenshots_1', 'www.example.com/screenshots_2'
   s.license          = { :type => 'Apache 2.0', :file => 'LICENSE' }
   s.author           = { 'jdkizer9' => 'jdkizer9@users.noreply.github.com' }
-  s.source           = { :git => 'https://github.com/jdkizer9/LS2SDK.git', :tag => s.version.to_s }
+  s.source           = { :git => 'https://github.com/CuriosityHealth/LS2SDK.git', :tag => s.version.to_s }
   # s.social_media_url = 'https://twitter.com/<TWITTER_USERNAME>'
 
   s.ios.deployment_target = '10.0'
@@ -65,7 +65,11 @@ TODO: Add long description of the pod here.
 
   s.subspec 'Database' do |db|
     db.source_files = 'Source/Database/**/*'
+    db.dependency 'LS2SDK/Common'
+    db.dependency 'LS2SDK/RSRPSupport'
     db.dependency 'RealmSwift'
+    db.dependency 'ResearchSuiteResultsProcessor', '~> 0.8'
+    db.dependency 'ResearchSuiteExtensions', '~> 0.14'
   end
 
   s.default_subspec = 'Common', 'Core', 'RKSupport', 'RSTBSupport', 'RSRPSupport'
