@@ -266,6 +266,10 @@ open class LS2DatabaseManager: NSObject {
             
             self.logger?.log(tag: LS2DatabaseManager.TAG, level: .info, message: "Deleting realm")
             
+            //clear file key first so that even if an error occurs, the encryption key is no longer available
+            self.credentialStore.set(value: nil, key: LS2DatabaseManager.kDatabaseKey)
+            self.credentialStore.set(value: nil, key: LS2DatabaseManager.kFileUUID)
+            
             try self.datapointQueue.clear()
             
             assert(self.realm != nil)
@@ -283,14 +287,20 @@ open class LS2DatabaseManager: NSObject {
             }
             
             try FileManager.default.removeItem(at: self.realmFile)
-            self.credentialStore.set(value: nil, key: LS2DatabaseManager.kDatabaseKey)
-            self.credentialStore.set(value: nil, key: LS2DatabaseManager.kFileUUID)
+            try FileManager.default.removeItem(at: self.realmFile.deletingLastPathComponent())
             
             completion(nil)
 
         } catch let error {
+            
+            
+            try? FileManager.default.removeItem(at: self.realmFile)
+            try? FileManager.default.removeItem(at: self.realmFile.deletingLastPathComponent())
+            
             completion(error)
+            
         }
+
         
     }
     
