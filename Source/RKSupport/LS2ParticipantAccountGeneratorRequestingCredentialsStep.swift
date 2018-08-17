@@ -39,6 +39,8 @@ open class LS2ParticipantAccountGeneratorRequestingCredentialsStep: RSLoginStep 
         let identityFieldName = identityFieldName ?? "Study ID"
         let passwordFieldName = passwordFieldName ?? "Study Passphrase"
         
+        let buttonText = buttonText ?? "Create Account"
+        
         self.manager = manager
         
         if let generatorID = generatorID {
@@ -51,7 +53,7 @@ open class LS2ParticipantAccountGeneratorRequestingCredentialsStep: RSLoginStep 
                 passwordFieldName: passwordFieldName,
                 passwordFieldAnswerFormat: RSLoginStep.usernameAnswerFormat(),
                 loginViewControllerClass: LS2ParticipantAccountGeneratorRequestingCredentialsStepViewController.self,
-                loginButtonTitle: "Create Account"
+                loginButtonTitle: buttonText
             )
         }
         else {
@@ -65,7 +67,7 @@ open class LS2ParticipantAccountGeneratorRequestingCredentialsStep: RSLoginStep 
                 passwordFieldName: passwordFieldName,
                 passwordFieldAnswerFormat: RSLoginStep.usernameAnswerFormat(),
                 loginViewControllerClass: LS2ParticipantAccountGeneratorRequestingCredentialsStepViewController.self,
-                loginButtonTitle: "Create Account"
+                loginButtonTitle: buttonText
             )
         }
         
