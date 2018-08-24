@@ -476,6 +476,11 @@ open class LS2DatabaseManager: NSObject {
                             
                             self.syncQueue.async {
                                 self.isSyncing = false
+                                
+                                //if sync was successful, try to sync again
+                                //a race condition exists where we are in the process of syncing and new datapoints
+                                //are added to the queue
+                                self.sync()
                             }
                         }
                         
