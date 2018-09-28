@@ -118,7 +118,7 @@ open class LS2DatabaseManager: NSObject {
                 } catch let error as NSError {
                     //TODO: handle this
                     self.logger?.log(tag: LS2DatabaseManager.TAG, level: .error, message: "An error occurred removing the file: \(error)")
-                    print(error.localizedDescription);
+//                    print(error.localizedDescription);
                 }
             }
             
@@ -136,7 +136,7 @@ open class LS2DatabaseManager: NSObject {
         } catch let error as NSError {
             //TODO: Handle this
             self.logger?.log(tag: LS2DatabaseManager.TAG, level: .error, message: "An error occurred configuring the database directory: \(error)")
-            print(error.localizedDescription);
+//            print(error.localizedDescription);
         }
 //
         let finalDatabaseFilePath = finalDatabaseDirectory.appending("/\(databaseFileName)")
@@ -286,6 +286,8 @@ open class LS2DatabaseManager: NSObject {
                 
             }
             
+            
+            self._realmConfig = nil
             try FileManager.default.removeItem(at: self.realmFile)
             try FileManager.default.removeItem(at: self.realmFile.deletingLastPathComponent())
             
@@ -293,7 +295,7 @@ open class LS2DatabaseManager: NSObject {
 
         } catch let error {
             
-            
+            self._realmConfig = nil
             try? FileManager.default.removeItem(at: self.realmFile)
             try? FileManager.default.removeItem(at: self.realmFile.deletingLastPathComponent())
             
@@ -304,18 +306,27 @@ open class LS2DatabaseManager: NSObject {
         
     }
     
+    var _realmConfig: Realm.Configuration?
     var realmConfig: Realm.Configuration {
-        return Realm.Configuration(
-            fileURL: self.realmFile,
-            inMemoryIdentifier: nil,
-            syncConfiguration: nil,
-            encryptionKey: self.encryptionEnabled ? (self.credentialStore.get(key: LS2DatabaseManager.kDatabaseKey) as? NSData)! as Data: nil,
-            readOnly: false,
-            schemaVersion: self.schemaVersion,
-            migrationBlock: nil,
-            deleteRealmIfMigrationNeeded: false,
-            shouldCompactOnLaunch: nil,
-            objectTypes: nil)
+        if let config = self._realmConfig {
+            return config
+        }
+        else {
+            let config = Realm.Configuration(
+                fileURL: self.realmFile,
+                inMemoryIdentifier: nil,
+                syncConfiguration: nil,
+                encryptionKey: self.encryptionEnabled ? (self.credentialStore.get(key: LS2DatabaseManager.kDatabaseKey) as? NSData)! as Data: nil,
+                readOnly: false,
+                schemaVersion: self.schemaVersion,
+                migrationBlock: nil,
+                deleteRealmIfMigrationNeeded: false,
+                shouldCompactOnLaunch: nil,
+                objectTypes: nil)
+            
+            self._realmConfig = config
+            return config
+        }
     }
     
 //    func instantiateRealm(completion: @escaping (Realm?, Error?) -> Void) {
