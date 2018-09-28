@@ -156,10 +156,10 @@ open class LS2Manager: NSObject {
                 return
         }
         
-        self.signIn(username: username, password: password, forceSignIn: forceSignIn, completion: completion)
+        self.signIn(username: username, password: password, saveUsernameOnSuccess: false, forceSignIn: forceSignIn, completion: completion)
     }
     
-    public func signIn(username: String, password: String, forceSignIn:Bool = false, completion: @escaping ((Error?) -> ())) {
+    public func signIn(username: String, password: String, saveUsernameOnSuccess: Bool, forceSignIn:Bool = false, completion: @escaping ((Error?) -> ())) {
         
         if self.isSignedIn && forceSignIn == false {
             completion(LS2ManagerErrors.alreadySignedIn)
@@ -178,6 +178,10 @@ open class LS2Manager: NSObject {
             
             if let response = signInResponse {
                 self.setAuthToken(authToken: response.authToken)
+                if saveUsernameOnSuccess {
+                    self.setCredentials(username: username, password: nil)
+                }
+
             }
             
             self.reachabilityManager.startListening()
@@ -294,11 +298,13 @@ open class LS2Manager: NSObject {
         }
     }
     
-    private func setCredentials(username: String, password: String) {
+    private func setCredentials(username: String, password: String?) {
         self.credentialsQueue.sync {
             self.credentialStoreQueue.async {
                 self.credentialStore.set(value: username as NSString, key: LS2Manager.kUsername)
-                self.credentialStore.set(value: password as NSString, key: LS2Manager.kPassword)
+                if let pw = password {
+                    self.credentialStore.set(value: pw as NSString, key: LS2Manager.kPassword)
+                }
             }
             return
         }

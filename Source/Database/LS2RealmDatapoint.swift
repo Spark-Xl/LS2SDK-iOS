@@ -60,7 +60,7 @@ open class LS2RealmDatapoint: Object, LS2Datapoint, LS2DatapointBuilder {
             catch let error {
                 //Do a better job of handling this here!!
                 assertionFailure("Cannot convert datapoint")
-                debugPrint(error)
+//                debugPrint(error)
             }
         }
         
@@ -82,7 +82,7 @@ open class LS2RealmDatapoint: Object, LS2Datapoint, LS2DatapointBuilder {
         catch let error {
             //Do a better job of handling this here!!
             assertionFailure("Cannot convert datapoint")
-            debugPrint(error)
+//            debugPrint(error)
         }
         
         //set _body to body
@@ -102,7 +102,7 @@ open class LS2RealmDatapoint: Object, LS2Datapoint, LS2DatapointBuilder {
         catch let error {
             //Do a better job of handling this here!!
             assertionFailure("Cannot convert datapoint")
-            debugPrint(error)
+//            debugPrint(error)
             return nil
         }
 
