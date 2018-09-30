@@ -86,6 +86,11 @@ open class LS2Client: NSObject {
                 return
             }
             
+            if response.statusCode != 201 {
+                completion(nil, LS2ClientError.invalidAccountCreationToken)
+                return
+            }
+            
             guard jsonResponse.result.isSuccess,
                 let jsonData = jsonResponse.data,
                 let credentials = try? JSONDecoder().decode(ParticipantAccountGenerationResponse.self, from: jsonData) else {
@@ -103,6 +108,24 @@ open class LS2Client: NSObject {
         let parameters = [
             "generator_id": generatorCredentials.generatorId,
             "generator_password": generatorCredentials.generatorPassword
+        ]
+        
+        let request = self.sessionManager.request(
+            urlString,
+            method: .post,
+            parameters: parameters,
+            encoding: JSONEncoding.default)
+        
+        request.responseJSON(queue: self.dispatchQueue, completionHandler: self.processParticipantAccountGenerationResponse(completion: completion))
+        
+    }
+    
+    open func generateParticipantAccountWithToken(generatorId: String, token: String, completion: @escaping ((ParticipantAccountGenerationResponse?, Error?) -> ())) {
+        
+        let urlString = "\(self.baseURL)/account/generate/token"
+        let parameters = [
+            "generator_id": generatorId,
+            "token": token
         ]
         
         let request = self.sessionManager.request(

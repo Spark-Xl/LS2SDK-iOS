@@ -149,6 +149,33 @@ open class LS2Manager: NSObject {
         //call client
     }
     
+    public func generateParticipantAccountWithToken(generatorId: String, token: String, completion: @escaping ((Error?) -> ())) {
+        //check for credentials
+        if self.hasCredentials {
+            completion(LS2ManagerErrors.hasCredentials)
+            return
+        }
+        
+        self.client.generateParticipantAccountWithToken(generatorId: generatorId, token: token) { (response, error) in
+            
+            if let err = error {
+                
+                completion(err)
+                return
+                
+            }
+            
+            if let credentials = response {
+                self.setCredentials(username: credentials.username, password: credentials.password)
+            }
+            
+            completion(nil)
+            
+        }
+        
+        //call client
+    }
+    
     public func signInWithCredentials(forceSignIn:Bool = false, completion: @escaping ((Error?) -> ())) {
         guard let username = self.getUsername(),
             let password = self.getPassword() else {
