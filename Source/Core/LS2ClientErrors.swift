@@ -61,6 +61,8 @@ public enum LS2ClientError: Error {
     
     case invalidAccountCreationToken
     
+    case accountCreationThrottled
+    
     case unknownError
 }
 
