@@ -40,13 +40,7 @@ open class LS2ParticipantAccountGeneratorStepViewController: RSQuestionViewContr
         super.viewDidLoad()
         
         if let step = self.step as? LS2ParticipantAccountGeneratorStep {
-            
-            if let buttonText = step.buttonText {
-                self.setContinueButtonTitle(title: buttonText)
-            }
-            
             step.viewControllerDidLoad?(self)
-            
         }
         
     }

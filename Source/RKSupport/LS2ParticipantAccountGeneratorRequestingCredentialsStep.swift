@@ -15,12 +15,8 @@ import ResearchSuiteExtensions
 
 open class LS2ParticipantAccountGeneratorRequestingCredentialsStep: RSLoginStep {
     
-//    public var buttonText: String? = nil
-//    public var viewControllerDidLoad: ((UIViewController) -> ())?
-    
     public let manager: LS2Manager
-//    public let participantAccountGeneratorCredentials: LS2ParticipantAccountGeneratorCredentials
-    
+
     public let generatorID: String?
     
     public init(identifier: String,

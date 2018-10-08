@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'LS2SDK'
-  s.version          = '0.9.0'
+  s.version          = '0.10.0'
   s.summary          = 'A short description of LS2SDK.'
 
 # This description is used to generate tags and improve search results.
@@ -40,7 +40,7 @@ TODO: Add long description of the pod here.
     core.source_files = 'Source/Core/**/*'
     core.dependency 'LS2SDK/Common'
     core.dependency 'Alamofire', '~> 4'
-    core.dependency 'ResearchSuiteExtensions', '~> 0.14'
+    core.dependency 'ResearchSuiteExtensions', '~> 0.17'
     core.dependency 'Gloss', '~> 2.0'
   end
 
@@ -54,13 +54,13 @@ TODO: Add long description of the pod here.
     rstb.source_files = 'Source/RSTBSupport/**/*'
     rstb.dependency 'LS2SDK/Core'
     rstb.dependency 'LS2SDK/RKSupport'
-    rstb.dependency 'ResearchSuiteTaskBuilder'
+    rstb.dependency 'ResearchSuiteTaskBuilder', '~> 0.12'
   end
 
   s.subspec 'RSRPSupport' do |rsrp|
     rsrp.source_files = 'Source/RSRPSupport/**/*'
     rsrp.dependency 'LS2SDK/Core'
-    rsrp.dependency 'ResearchSuiteResultsProcessor', '~> 0.8'
+    rsrp.dependency 'ResearchSuiteResultsProcessor', '~> 0.9'
   end
 
   s.subspec 'Database' do |db|
@@ -68,8 +68,8 @@ TODO: Add long description of the pod here.
     db.dependency 'LS2SDK/Common'
     db.dependency 'LS2SDK/RSRPSupport'
     db.dependency 'RealmSwift'
-    db.dependency 'ResearchSuiteResultsProcessor', '~> 0.8'
-    db.dependency 'ResearchSuiteExtensions', '~> 0.14'
+    db.dependency 'ResearchSuiteResultsProcessor', '~> 0.9'
+    db.dependency 'ResearchSuiteExtensions', '~> 0.19'
   end
 
   s.default_subspec = 'Common', 'Core', 'RKSupport', 'RSTBSupport', 'RSRPSupport'
