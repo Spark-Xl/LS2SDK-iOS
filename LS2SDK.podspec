@@ -69,7 +69,7 @@ TODO: Add long description of the pod here.
     db.dependency 'LS2SDK/RSRPSupport'
     db.dependency 'RealmSwift'
     db.dependency 'ResearchSuiteResultsProcessor', '~> 0.9'
-    db.dependency 'ResearchSuiteExtensions', '~> 0.19'
+    db.dependency 'ResearchSuiteExtensions', '~> 0.17'
   end
 
   s.default_subspec = 'Common', 'Core', 'RKSupport', 'RSTBSupport', 'RSRPSupport'
