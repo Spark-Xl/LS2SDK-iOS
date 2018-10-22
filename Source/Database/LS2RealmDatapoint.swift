@@ -36,6 +36,15 @@ open class LS2RealmDatapoint: Object, LS2Datapoint, LS2DatapointBuilder {
         return LS2RealmDatapoint(header: header, body: body)
     }
     
+    public static func copyDatapoint(datapoint: LS2Datapoint) -> LS2Datapoint? {
+        guard let header = datapoint.header,
+            let body = datapoint.body else {
+                return nil
+        }
+        
+        return createDatapoint(header: header, body: body)
+    }
+    
     private func configureHeader(header: LS2DatapointHeader) {
         
         self.idString = header.id.uuidString
@@ -126,13 +135,11 @@ open class LS2RealmDatapoint: Object, LS2Datapoint, LS2DatapointBuilder {
                 patch: self.schemaVersionPatch
             )
             
-            guard let schema = LS2Schema(
+            let schema = LS2Schema(
                 name: self.schemaName,
                 version: schemaVersion,
                 namespace: self.schemaNamespace
-                ) else {
-                    return nil
-            }
+            )
             
             guard let modality = LS2AcquisitionProvenanceModality(rawValue: self.apModalityString) else {
                 return nil
