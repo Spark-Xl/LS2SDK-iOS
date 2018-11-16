@@ -19,6 +19,10 @@ class LS2Store: NSObject, RSCredentialsStore, RSTBStateHelper {
         switch forKey {
         case "ls2Manager":
             return AppDelegate.appDelegate.ls2Manager
+        case "ls2ParticipantAccountCredentials":
+            return AppDelegate.appDelegate.automaticParticipantAccountCredentials
+        case "ls2ParticipantAccountGeneratorID":
+            return AppDelegate.appDelegate.participantAccountGeneratorID as AnyObject
         default:
             return nil
         }

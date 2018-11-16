@@ -35,10 +35,16 @@
                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="gDb-ex-gdl">
                                         <rect key="frame" x="82.5" y="190.5" width="210" height="75.5"/>
                                         <state key="normal" title="Automatic Account Generation"/>
+                                        <connections>
+                                            <action selector="automaticAccountCreation:" destination="vXZ-lx-hvc" eventType="touchUpInside" id="hH4-j8-V4A"/>
+                                        </connections>
                                     </button>
                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="roE-f0-V1b">
                                         <rect key="frame" x="48.5" y="286" width="278" height="75"/>
                                         <state key="normal" title="Password Protected Account Generation"/>
+                                        <connections>
+                                            <action selector="passwordProtectedAccountGeneration:" destination="vXZ-lx-hvc" eventType="touchUpInside" id="qNG-OT-kiF"/>
+                                        </connections>
                                     </button>
                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="XhH-GX-gR7">
                                         <rect key="frame" x="73.5" y="381" width="228" height="75.5"/>

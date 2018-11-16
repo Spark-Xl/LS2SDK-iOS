@@ -32,6 +32,20 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var ls2Backend: LS2BackEnd!
     
 
+    var participantAccountGeneratorID: String {
+        return "8e502133-d1c6-4784-8f26-c9c41d95b5b8"
+    }
+    
+    var participantAccountGeneratorPassword: String {
+        return "ls2sdkpassword"
+    }
+    
+    var automaticParticipantAccountCredentials: LS2ParticipantAccountGeneratorCredentials {
+        return LS2ParticipantAccountGeneratorCredentials(
+            generatorId: self.participantAccountGeneratorID,
+            generatorPassword: self.participantAccountGeneratorPassword
+        )
+    }
 
     func application(_ application: UIApplication, willFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey : Any]? = nil) -> Bool {
         if UserDefaults.standard.object(forKey: "FirstRun") == nil {
@@ -152,7 +166,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             RSTBBooleanStepGenerator(),
             RSTBPasscodeStepGenerator(),
             RSTBScaleStepGenerator(),
-            LS2LoginStepGenerator()
+            LS2LoginStepGenerator(),
+            LS2ParticipantAccountGeneratorStepGenerator(),
+            LS2ParticipantAccountGeneratorRequestingCredentialsStepGenerator()
         ]
     }
     

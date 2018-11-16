@@ -24,6 +24,13 @@ class LS2OnboardingViewController: UIViewController {
         self.launchActivity(identifier: "signInWithUsername")
     }
     
+    @IBAction func automaticAccountCreation(_ sender: Any) {
+        self.launchActivity(identifier: "autoGenerateAccount")
+    }
+    
+    @IBAction func passwordProtectedAccountGeneration(_ sender: Any) {
+        self.launchActivity(identifier: "passwordProtectedGenerateAccount")
+    }
     open func launchActivity(identifier: String) {
         
         let filename = "\(identifier).json"
