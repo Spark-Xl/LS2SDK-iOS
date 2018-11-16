@@ -31,7 +31,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var ls2Manager: LS2Manager!
     var ls2Backend: LS2BackEnd!
     
-
+    var ls2URLDelegate: LS2TokenBasedAccountCreationURLDelegate!
+    
     var participantAccountGeneratorID: String {
         return "8e502133-d1c6-4784-8f26-c9c41d95b5b8"
     }
@@ -84,9 +85,32 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             backEnd: self.ls2Backend
         )
         
+        self.ls2URLDelegate = LS2TokenBasedAccountCreationURLDelegate(
+            path: "account/generate/token",
+            ls2ManagerProvider: self.ls2ManagerProvider,
+            creationStart: self.ls2AccountCreationStart,
+            creationCompletion: self.ls2AccountCreationCompletion
+        )
+        
         self.showViewController(animated: false)
         
         return true
+    }
+    
+    //note that this is invoked after application didFinishLauchingWithOptions
+    open func application(_ app: UIApplication, open url: URL, options: [UIApplicationOpenURLOptionsKey : Any] = [:]) -> Bool {
+        return self.handleURL(app: app, url: url, options: options)
+    }
+    
+    open func handleURL(app: UIApplication, url: URL, options: [UIApplicationOpenURLOptionsKey : Any]) -> Bool {
+        let delegates = self.openURLDelegates
+
+        for delegate in delegates {
+            let context: [String: AnyObject] = [:]
+            let handled = delegate.handleURL(app: app, url: url, options: options, context: context)
+            if handled { return true }
+        }
+        return false
     }
     
     open func showViewController(animated: Bool) {
@@ -143,6 +167,82 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             window.rootViewController = toRootViewController
             completion?(true)
         }
+    }
+    
+    open var ls2ManagerProvider: () -> LS2Manager? {
+        return { [unowned self] in
+            return self.ls2Manager
+        }
+    }
+    
+    open var ls2AccountCreationStart: () -> () {
+        return { [unowned self] in
+            
+            guard let onboardingVC = self.window?.rootViewController as? LS2OnboardingViewController else {
+                return
+            }
+            
+            
+            
+            onboardingVC.activityIndicator.startAnimating()
+            
+            
+//            self.store?.dispatch(RSActionCreators.setValueInState(key: "landingIsLoading", value: true as NSObject))
+            
+        }
+    }
+    
+    open var ls2AccountCreationCompletion: (Bool, Error?) -> () {
+        return { [unowned self] success, error in
+            
+            guard let onboardingVC = self.window?.rootViewController as? LS2OnboardingViewController else {
+                return
+            }
+            
+            onboardingVC.activityIndicator.stopAnimating()
+            
+            if success {
+                
+                DispatchQueue.main.async {
+                    self.showViewController(animated: true)
+                }
+                
+            }
+            else {
+                //set error message
+                let errorMessage: String = {
+                    switch error {
+                    case .some(LS2ClientError.invalidAccountCreationToken):
+                        return "The specified token is invalid. Please contact the research team to get a new token."
+                    case .some(LS2ClientError.accountCreationThrottled):
+                        return "Too many attempts. Please wait a while and try again. If the problem persists, please contact the research team."
+                    default:
+                        return "An error occurred during account creation. Please wait a while and try again. If the problem persists, please contact the research team."
+                    }
+                }()
+                
+                DispatchQueue.main.async {
+                    let alertController = UIAlertController(title: "Log in failed", message: errorMessage, preferredStyle: UIAlertControllerStyle.alert)
+                    
+                    // Replace UIAlertActionStyle.Default by UIAlertActionStyle.default
+                    let okAction = UIAlertAction(title: "OK", style: UIAlertActionStyle.default) {
+                        (result : UIAlertAction) -> Void in
+                        
+                    }
+                    
+                    alertController.addAction(okAction)
+                    onboardingVC.present(alertController, animated: true)
+                }
+                
+                
+            }
+        }
+    }
+    
+    open var openURLDelegates: [RSOpenURLDelegate] {
+        return [
+            self.ls2URLDelegate
+            ]
     }
     
     open class var elementGeneratorServices: [RSTBElementGenerator] {

@@ -20,6 +20,8 @@ class LS2OnboardingViewController: UIViewController {
         // Do any additional setup after loading the view.
     }
     
+    @IBOutlet public weak var activityIndicator: UIActivityIndicatorView!
+    
     @IBAction func signInWithUsername(_ sender: Any) {
         self.launchActivity(identifier: "signInWithUsername")
     }
