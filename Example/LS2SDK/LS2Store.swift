@@ -23,6 +23,8 @@ class LS2Store: NSObject, RSCredentialsStore, RSTBStateHelper {
             return AppDelegate.appDelegate.automaticParticipantAccountCredentials
         case "ls2ParticipantAccountGeneratorID":
             return AppDelegate.appDelegate.participantAccountGeneratorID as AnyObject
+        case "ls2ShortTokenBasedParticipantAccountGeneratorID":
+            return AppDelegate.appDelegate.shortTokenBasedParticipantAccountGeneratorID as AnyObject
         default:
             return nil
         }

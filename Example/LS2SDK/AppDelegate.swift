@@ -36,6 +36,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         return "8e502133-d1c6-4784-8f26-c9c41d95b5b8"
     }
     
+    var shortTokenBasedParticipantAccountGeneratorID: String {
+        return "8d432160-3613-40fb-9ab6-9d5eef35c040"
+    }
+    
     var participantAccountGeneratorPassword: String {
         return "ls2sdkpassword"
     }
@@ -168,7 +172,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             RSTBScaleStepGenerator(),
             LS2LoginStepGenerator(),
             LS2ParticipantAccountGeneratorStepGenerator(),
-            LS2ParticipantAccountGeneratorRequestingCredentialsStepGenerator()
+            LS2ParticipantAccountGeneratorRequestingCredentialsStepGenerator(),
+            RSEnhancedInstructionStepGenerator(),
+            LS2ParticipantAccountGeneratorTokenStepGenerator()
         ]
     }
     

@@ -1,0 +1,32 @@
+{
+    "type": "recurring",
+    "identifier": "signInWithUsername",
+    "title": "login",
+    "guid": "login-1",
+    "activity": {
+      "type": "elementList",
+      "identifier": "LS2Login",
+      "elements": [
+        {
+            "identifier": "welcome_instructions",
+            "type": "instruction",
+            "title": "Hi! 👋👋",
+            "text": "Welcome to LS2 SDK Example."
+          },
+          {
+            "identifier": "getting_started_instructions",
+            "type": "RSEnhancedInstructionStep",
+            "title": "Getting Started",
+            "text": "First, you're going to need to sign in.\n\nIn the next step, we'll create an account for you."
+          },
+          {
+            "identifier": "logIn",
+            "type": "LS2ParticipantAccountGeneratorTokenStepGenerator",
+            "title": "Create Account",
+            "buttonText": "Create Account",
+            "generatorIDKey": "ls2ShortTokenBasedParticipantAccountGeneratorID"
+          }
+      ]
+    },
+    "resultTransforms": []
+  }
