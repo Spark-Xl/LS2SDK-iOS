@@ -1,0 +1,72 @@
+{
+    "type": "recurring",
+    "identifier": "survey",
+    "title": "survey",
+    "guid": "survey",
+    "activity": {
+        "type": "elementList",
+        "identifier": "survey_list",
+        "elements": [
+            {
+                "identifier": "survey_list.gender",
+                "type": "singleChoiceText",
+                "text": "What is your gender?",
+                "items": [
+                    {
+                        "prompt": "Female",
+                        "value": "female"
+                    },
+                    {
+                        "prompt": "Male",
+                        "value": "male"
+                    },
+                    {
+                        "prompt": "Transgender",
+                        "value": "transgender"
+                    },
+                    {
+                        "prompt": "Other",
+                        "value": "other"
+                    }
+                ]
+            },
+            {
+                "identifier": "survey_list.age",
+                "type": "numericInteger",
+                "text": "What is your age?",
+                "range": {
+                    "min": 18,
+                    "max": 99,
+                    "unitLabel": "years"
+                }
+            },
+            {
+                "identifier": "survey_list.zip_code",
+                "type": "textfield",
+                "text": "What is your zip code?",
+                "validationRegex": "^[0-9]{5}$",
+                "invalidMessage": "Please enter a valid zip code."
+            }
+        ]
+    },
+    "resultTransforms": [
+        {
+            "identifier":"auto",
+            "transform":"auto",
+            "inputMapping":[
+              {
+                "parameter":"schema",
+                "constant":{
+                  "namespace":"com.curiosityhealth.ls2sdk.example",
+                  "name":"survey",
+                  "version":"1.0.0"
+                }
+              },
+              {
+                "stepIdentifierRegex":"survey_list",
+                "parameter":"results"
+              }
+            ]
+          }
+    ]
+}

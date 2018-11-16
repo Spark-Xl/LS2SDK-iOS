@@ -8,14 +8,15 @@
 
 /* Begin PBXBuildFile section */
 		607FACD61AFB9204008FA782 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 607FACD51AFB9204008FA782 /* AppDelegate.swift */; };
-		607FACD81AFB9204008FA782 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 607FACD71AFB9204008FA782 /* ViewController.swift */; };
 		607FACDB1AFB9204008FA782 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 607FACD91AFB9204008FA782 /* Main.storyboard */; };
 		607FACDD1AFB9204008FA782 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 607FACDC1AFB9204008FA782 /* Images.xcassets */; };
 		607FACE01AFB9204008FA782 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 607FACDE1AFB9204008FA782 /* LaunchScreen.xib */; };
 		607FACEC1AFB9204008FA782 /* Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 607FACEB1AFB9204008FA782 /* Tests.swift */; };
 		A1D540D5C4E4CFFD277B88F0 /* Pods_LS2SDK_Tests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F19C481D1E387C3B67052AA3 /* Pods_LS2SDK_Tests.framework */; };
-		E2A08A841FF315A700F2E0DA /* PAMSample.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2A08A831FF315A700F2E0DA /* PAMSample.swift */; };
 		E2A08A8A1FF3331900F2E0DA /* LS2Store.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2A08A891FF3331900F2E0DA /* LS2Store.swift */; };
+		E2BBA3E6219E43C0005923A3 /* LS2OnboardingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2BBA3E5219E43C0005923A3 /* LS2OnboardingViewController.swift */; };
+		E2BBA3E8219E4652005923A3 /* LS2MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2BBA3E7219E4652005923A3 /* LS2MainViewController.swift */; };
+		E2BBA3EA219E4B67005923A3 /* config in Resources */ = {isa = PBXBuildFile; fileRef = E2BBA3E9219E4B67005923A3 /* config */; };
 		ED69FC7E23DFF602B9842D05 /* Pods_LS2SDK_Example.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 55C75253006EE0907544E01A /* Pods_LS2SDK_Example.framework */; };
 /* End PBXBuildFile section */
 
@@ -35,7 +36,6 @@
 		607FACD01AFB9204008FA782 /* LS2SDK_Example.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LS2SDK_Example.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		607FACD41AFB9204008FA782 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		607FACD51AFB9204008FA782 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		607FACD71AFB9204008FA782 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
 		607FACDA1AFB9204008FA782 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		607FACDC1AFB9204008FA782 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
 		607FACDF1AFB9204008FA782 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/LaunchScreen.xib; sourceTree = "<group>"; };
@@ -47,8 +47,10 @@
 		AA17615FCAF1EB81FB0D7E94 /* Pods-LS2SDK_Example.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-LS2SDK_Example.release.xcconfig"; path = "Pods/Target Support Files/Pods-LS2SDK_Example/Pods-LS2SDK_Example.release.xcconfig"; sourceTree = "<group>"; };
 		B5DF4D0F9E8481FB9247C2AF /* Pods-LS2SDK_Example.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-LS2SDK_Example.debug.xcconfig"; path = "Pods/Target Support Files/Pods-LS2SDK_Example/Pods-LS2SDK_Example.debug.xcconfig"; sourceTree = "<group>"; };
 		DE9AAA3D05299CBAA388235E /* README.md */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../README.md; sourceTree = "<group>"; };
-		E2A08A831FF315A700F2E0DA /* PAMSample.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PAMSample.swift; sourceTree = "<group>"; };
 		E2A08A891FF3331900F2E0DA /* LS2Store.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LS2Store.swift; sourceTree = "<group>"; };
+		E2BBA3E5219E43C0005923A3 /* LS2OnboardingViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LS2OnboardingViewController.swift; sourceTree = "<group>"; };
+		E2BBA3E7219E4652005923A3 /* LS2MainViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LS2MainViewController.swift; sourceTree = "<group>"; };
+		E2BBA3E9219E4B67005923A3 /* config */ = {isa = PBXFileReference; lastKnownFileType = folder; path = config; sourceTree = "<group>"; };
 		E46265433192083696ED4B6C /* LICENSE */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; name = LICENSE; path = ../LICENSE; sourceTree = "<group>"; };
 		F19C481D1E387C3B67052AA3 /* Pods_LS2SDK_Tests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_LS2SDK_Tests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -108,10 +110,11 @@
 		607FACD21AFB9204008FA782 /* Example for LS2SDK */ = {
 			isa = PBXGroup;
 			children = (
+				E2BBA3E9219E4B67005923A3 /* config */,
 				607FACD51AFB9204008FA782 /* AppDelegate.swift */,
-				607FACD71AFB9204008FA782 /* ViewController.swift */,
 				E2A08A891FF3331900F2E0DA /* LS2Store.swift */,
-				E2A08A831FF315A700F2E0DA /* PAMSample.swift */,
+				E2BBA3E5219E43C0005923A3 /* LS2OnboardingViewController.swift */,
+				E2BBA3E7219E4652005923A3 /* LS2MainViewController.swift */,
 				607FACD91AFB9204008FA782 /* Main.storyboard */,
 				607FACDC1AFB9204008FA782 /* Images.xcassets */,
 				607FACDE1AFB9204008FA782 /* LaunchScreen.xib */,
@@ -177,7 +180,6 @@
 				607FACCD1AFB9204008FA782 /* Frameworks */,
 				607FACCE1AFB9204008FA782 /* Resources */,
 				F98ED4D476BA67590C992B36 /* [CP] Embed Pods Frameworks */,
-				9B610E9EA49169352972D24A /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -196,8 +198,6 @@
 				607FACE11AFB9204008FA782 /* Sources */,
 				607FACE21AFB9204008FA782 /* Frameworks */,
 				607FACE31AFB9204008FA782 /* Resources */,
-				40D1907BB00BCD1E31CFB3EF /* [CP] Embed Pods Frameworks */,
-				02E81F057E87CEA61C9BB8DB /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -256,6 +256,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E2BBA3EA219E4B67005923A3 /* config in Resources */,
 				607FACDB1AFB9204008FA782 /* Main.storyboard in Resources */,
 				607FACE01AFB9204008FA782 /* LaunchScreen.xib in Resources */,
 				607FACDD1AFB9204008FA782 /* Images.xcassets in Resources */,
@@ -290,21 +291,6 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		02E81F057E87CEA61C9BB8DB /* [CP] Copy Pods Resources */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "[CP] Copy Pods Resources";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-LS2SDK_Tests/Pods-LS2SDK_Tests-resources.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
 		40D10ADF2A12F5DADB4CAA7E /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -323,58 +309,26 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		40D1907BB00BCD1E31CFB3EF /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${SRCROOT}/Pods/Target Support Files/Pods-LS2SDK_Tests/Pods-LS2SDK_Tests-frameworks.sh",
-				"${BUILT_PRODUCTS_DIR}/Nimble/Nimble.framework",
-				"${BUILT_PRODUCTS_DIR}/Quick/Quick.framework",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Nimble.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Quick.framework",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-LS2SDK_Tests/Pods-LS2SDK_Tests-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		9B610E9EA49169352972D24A /* [CP] Copy Pods Resources */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "[CP] Copy Pods Resources";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-LS2SDK_Example/Pods-LS2SDK_Example-resources.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
 		F98ED4D476BA67590C992B36 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
-				"${SRCROOT}/Pods/Target Support Files/Pods-LS2SDK_Example/Pods-LS2SDK_Example-frameworks.sh",
+				"${PODS_ROOT}/Target Support Files/Pods-LS2SDK_Example/Pods-LS2SDK_Example-frameworks.sh",
 				"${BUILT_PRODUCTS_DIR}/Alamofire/Alamofire.framework",
 				"${BUILT_PRODUCTS_DIR}/GRMustache.swift/Mustache.framework",
 				"${BUILT_PRODUCTS_DIR}/Gloss/Gloss.framework",
 				"${BUILT_PRODUCTS_DIR}/LS2SDK/LS2SDK.framework",
-				"${BUILT_PRODUCTS_DIR}/OMHClient/OMHClient.framework",
+				"${BUILT_PRODUCTS_DIR}/ReSwift/ReSwift.framework",
 				"${BUILT_PRODUCTS_DIR}/ResearchKit/ResearchKit.framework",
+				"${BUILT_PRODUCTS_DIR}/ResearchSuiteAppFramework/ResearchSuiteAppFramework.framework",
 				"${BUILT_PRODUCTS_DIR}/ResearchSuiteExtensions/ResearchSuiteExtensions.framework",
 				"${BUILT_PRODUCTS_DIR}/ResearchSuiteResultsProcessor/ResearchSuiteResultsProcessor.framework",
 				"${BUILT_PRODUCTS_DIR}/ResearchSuiteTaskBuilder/ResearchSuiteTaskBuilder.framework",
 				"${BUILT_PRODUCTS_DIR}/SecureQueue/SecureQueue.framework",
+				"${BUILT_PRODUCTS_DIR}/SnapKit/SnapKit.framework",
+				"${BUILT_PRODUCTS_DIR}/SwiftyGif/SwiftyGif.framework",
 				"${BUILT_PRODUCTS_DIR}/SwiftyMarkdown/SwiftyMarkdown.framework",
 			);
 			name = "[CP] Embed Pods Frameworks";
@@ -383,17 +337,20 @@
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Mustache.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Gloss.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/LS2SDK.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/OMHClient.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ReSwift.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ResearchKit.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ResearchSuiteAppFramework.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ResearchSuiteExtensions.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ResearchSuiteResultsProcessor.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ResearchSuiteTaskBuilder.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SecureQueue.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SnapKit.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SwiftyGif.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SwiftyMarkdown.framework",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-LS2SDK_Example/Pods-LS2SDK_Example-frameworks.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-LS2SDK_Example/Pods-LS2SDK_Example-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -403,10 +360,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				607FACD81AFB9204008FA782 /* ViewController.swift in Sources */,
 				607FACD61AFB9204008FA782 /* AppDelegate.swift in Sources */,
-				E2A08A841FF315A700F2E0DA /* PAMSample.swift in Sources */,
 				E2A08A8A1FF3331900F2E0DA /* LS2Store.swift in Sources */,
+				E2BBA3E6219E43C0005923A3 /* LS2OnboardingViewController.swift in Sources */,
+				E2BBA3E8219E4652005923A3 /* LS2MainViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -556,7 +513,7 @@
 				INFOPLIST_FILE = LS2SDK/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MODULE_NAME = ExampleApp;
-				PRODUCT_BUNDLE_IDENTIFIER = "org.cocoapods.demo.$(PRODUCT_NAME:rfc1034identifier)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.curiosityhealth.ls2sdk.example;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_SWIFT3_OBJC_INFERENCE = Default;
 				SWIFT_VERSION = 4.0;
@@ -572,7 +529,7 @@
 				INFOPLIST_FILE = LS2SDK/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MODULE_NAME = ExampleApp;
-				PRODUCT_BUNDLE_IDENTIFIER = "org.cocoapods.demo.$(PRODUCT_NAME:rfc1034identifier)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.curiosityhealth.ls2sdk.example;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_SWIFT3_OBJC_INFERENCE = Default;
 				SWIFT_VERSION = 4.0;

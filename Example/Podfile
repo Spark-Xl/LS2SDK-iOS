@@ -1,17 +1,23 @@
 use_frameworks!
 platform :ios, '10.0'
 
+source 'https://github.com/ResearchSuite/Specs.git'
+source 'https://github.com/CuriosityHealth/Specs.git'
+source 'https://github.com/CocoaPods/Specs.git'
+
 target 'LS2SDK_Example' do
   pod 'LS2SDK', :path => '../'
 
-  pod 'OMHClient', :path => '~/Developer/ResearchSuite/iOS/OMHClient-ios'
-  pod 'ResearchSuiteExtensions', :path => '~/Developer/ResearchSuite/iOS/ResearchSuiteExtensions'
-  pod 'ResearchSuiteResultsProcessor', :git => 'https://github.com/ResearchSuite/ResearchSuiteResultsProcessor-ios', :tag => '0.8.0'
+  pod "ResearchKit", '~> 1.5'
+  pod "ResearchSuiteExtensions", '~> 0.20'
+  pod "ResearchSuiteTaskBuilder", '~> 0.13'
+  pod "ResearchSuiteResultsProcessor", '~> 0.9'
+  pod "ResearchSuiteAppFramework", :git => 'https://github.com/ResearchSuite/ResearchSuiteAppFramework-iOS', :branch => 'reduction'
 
   target 'LS2SDK_Tests' do
     inherit! :search_paths
 
-    pod 'Quick', '~> 1.2.0'
-  pod 'Nimble', '~> 7.0.2'
+  #   pod 'Quick', '~> 1.2.0'
+  # pod 'Nimble', '~> 7.0.2'
   end
 end

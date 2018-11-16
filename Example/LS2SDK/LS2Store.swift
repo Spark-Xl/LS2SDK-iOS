@@ -8,16 +8,36 @@
 
 import UIKit
 import LS2SDK
+import ResearchSuiteExtensions
+import ResearchSuiteTaskBuilder
 
-class LS2Store: NSObject, LS2CredentialStore {
+class LS2Store: NSObject, RSCredentialsStore, RSTBStateHelper {
     
-    public func set(value: NSSecureCoding?, key: String) {
-        UserDefaults().set(value, forKey: key)
+    let store = RSKeychainCredentialsStore(namespace: "ls2sdk_example")
+    
+    func objectInState(forKey: String) -> AnyObject? {
+        switch forKey {
+        case "ls2Manager":
+            return AppDelegate.appDelegate.ls2Manager
+        default:
+            return nil
+        }
     }
     
-    public func get(key: String) -> NSSecureCoding? {
-        let val = UserDefaults().object(forKey: key) as? NSSecureCoding
-        return val
+    
+    func valueInState(forKey: String) -> NSSecureCoding? {
+        return self.get(key: forKey)
+    }
+    
+    func setValueInState(value: NSSecureCoding?, forKey: String) {
+        self.set(value: value, key: forKey)
+    }
+    
+    func set(value: NSSecureCoding?, key: String) {
+        self.store.set(value: value, key: key)
+    }
+    func get(key: String) -> NSSecureCoding? {
+        return self.store.get(key:key)
     }
 
 }
