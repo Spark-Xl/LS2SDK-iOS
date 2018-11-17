@@ -9,8 +9,8 @@ target 'LS2SDK_Example' do
   pod 'LS2SDK', :path => '../'
 
   pod "ResearchKit", '~> 1.5'
-  # pod "ResearchSuiteExtensions", '~> 0.20'
-  pod "ResearchSuiteExtensions", :path => '~/Developer/ResearchSuite/iOS/ResearchSuiteExtensions-iOS/'
+  pod "ResearchSuiteExtensions", '~> 0.21'
+  # pod "ResearchSuiteExtensions", :path => '~/Developer/ResearchSuite/iOS/ResearchSuiteExtensions-iOS/'
   pod "ResearchSuiteTaskBuilder", '~> 0.13'
   pod "ResearchSuiteResultsProcessor", '~> 0.9'
   pod "ResearchSuiteAppFramework", :git => 'https://github.com/ResearchSuite/ResearchSuiteAppFramework-iOS', :branch => 'reduction'
