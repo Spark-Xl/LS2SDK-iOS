@@ -22,7 +22,7 @@ open class LS2TokenBasedAccountCreationURLDelegate: NSObject, RSOpenURLDelegate 
         super.init()
     }
     
-    open func handleURL(app: UIApplication, url: URL, options: [UIApplicationOpenURLOptionsKey : Any], context: [String : AnyObject]) -> Bool {
+    open func handleURL(app: UIApplication, url: URL, options: [UIApplication.OpenURLOptionsKey : Any], context: [String : AnyObject]) -> Bool {
         
         guard let ls2Manger = self.ls2ManagerProvider() else {
             return false

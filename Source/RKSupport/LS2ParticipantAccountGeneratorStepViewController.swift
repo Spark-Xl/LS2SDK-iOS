@@ -67,7 +67,7 @@ open class LS2ParticipantAccountGeneratorStepViewController: RSQuestionViewContr
     override open func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
-        let activityIndicator = UIActivityIndicatorView(activityIndicatorStyle: .gray)
+        let activityIndicator = UIActivityIndicatorView(style: .gray)
         self.view.addSubview(activityIndicator)
         activityIndicator.center = self.view.center
         self.activityIndicator = activityIndicator
@@ -80,10 +80,10 @@ open class LS2ParticipantAccountGeneratorStepViewController: RSQuestionViewContr
             self.logInSuccessful = false
             let message: String = "Invalid configuration. Please contact support."
             DispatchQueue.main.async {
-                let alertController = UIAlertController(title: "Log in failed", message: message, preferredStyle: UIAlertControllerStyle.alert)
+                let alertController = UIAlertController(title: "Log in failed", message: message, preferredStyle: UIAlertController.Style.alert)
                 
                 // Replace UIAlertActionStyle.Default by UIAlertActionStyle.default
-                let okAction = UIAlertAction(title: "OK", style: UIAlertActionStyle.default) {
+                let okAction = UIAlertAction(title: "OK", style: UIAlertAction.Style.default) {
                     (result : UIAlertAction) -> Void in
                     
                 }
@@ -120,10 +120,10 @@ open class LS2ParticipantAccountGeneratorStepViewController: RSQuestionViewContr
                         self.logInSuccessful = false
                         let message: String = "Invalid log in credentials. Please contact support."
                         DispatchQueue.main.async {
-                            let alertController = UIAlertController(title: "Log in failed", message: message, preferredStyle: UIAlertControllerStyle.alert)
+                            let alertController = UIAlertController(title: "Log in failed", message: message, preferredStyle: UIAlertController.Style.alert)
                             
                             // Replace UIAlertActionStyle.Default by UIAlertActionStyle.default
-                            let okAction = UIAlertAction(title: "OK", style: UIAlertActionStyle.default) {
+                            let okAction = UIAlertAction(title: "OK", style: UIAlertAction.Style.default) {
                                 (result : UIAlertAction) -> Void in
                                 
                             }
@@ -142,10 +142,10 @@ open class LS2ParticipantAccountGeneratorStepViewController: RSQuestionViewContr
                 self.logInSuccessful = false
                 let message: String = "Unable to create log in credentials. Please contact support."
                 DispatchQueue.main.async {
-                    let alertController = UIAlertController(title: "Log in failed", message: message, preferredStyle: UIAlertControllerStyle.alert)
+                    let alertController = UIAlertController(title: "Log in failed", message: message, preferredStyle: UIAlertController.Style.alert)
                     
                     // Replace UIAlertActionStyle.Default by UIAlertActionStyle.default
-                    let okAction = UIAlertAction(title: "OK", style: UIAlertActionStyle.default) {
+                    let okAction = UIAlertAction(title: "OK", style: UIAlertAction.Style.default) {
                         (result : UIAlertAction) -> Void in
                         
                     }

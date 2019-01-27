@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'LS2SDK'
-  s.version          = '0.11.0'
+  s.version          = '0.12.0'
   s.summary          = 'A short description of LS2SDK.'
 
 # This description is used to generate tags and improve search results.
@@ -29,7 +29,7 @@ TODO: Add long description of the pod here.
   # s.social_media_url = 'https://twitter.com/<TWITTER_USERNAME>'
 
   s.ios.deployment_target = '10.0'
-  s.swift_version = '4.1'
+  s.swift_version = '4.2'
 
   s.subspec 'Common' do |common|
     common.source_files = 'Source/Common/**/*'

@@ -43,10 +43,10 @@ open class LS2LoginStepViewController: RSLoginStepViewController {
                 else {
                     self.loggedIn = false
                     DispatchQueue.main.async {
-                        let alertController = UIAlertController(title: "Log in failed", message: "Username / Password are not valid", preferredStyle: UIAlertControllerStyle.alert)
+                        let alertController = UIAlertController(title: "Log in failed", message: "Username / Password are not valid", preferredStyle: UIAlertController.Style.alert)
                         
                         // Replace UIAlertActionStyle.Default by UIAlertActionStyle.default
-                        let okAction = UIAlertAction(title: "OK", style: UIAlertActionStyle.default) {
+                        let okAction = UIAlertAction(title: "OK", style: UIAlertAction.Style.default) {
                             (result : UIAlertAction) -> Void in
                             
                         }

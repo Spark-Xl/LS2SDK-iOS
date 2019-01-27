@@ -107,7 +107,7 @@ open class LS2Manager: NSObject {
         }
         
         
-        self.protectedDataAvaialbleObserver = NotificationCenter.default.addObserver(forName: .UIApplicationProtectedDataDidBecomeAvailable, object: nil, queue: nil) { [weak self](notification) in
+        self.protectedDataAvaialbleObserver = NotificationCenter.default.addObserver(forName: UIApplication.protectedDataDidBecomeAvailableNotification, object: nil, queue: nil) { [weak self](notification) in
             do {
                 try startUploading()
             } catch let error as NSError {

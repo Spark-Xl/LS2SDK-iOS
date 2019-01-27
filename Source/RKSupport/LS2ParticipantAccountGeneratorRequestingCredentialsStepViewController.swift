@@ -20,10 +20,10 @@ open class LS2ParticipantAccountGeneratorRequestingCredentialsStepViewController
 //            self.logInSuccessful = false
             let message: String = "Invalid configuration. Please contact support."
             DispatchQueue.main.async {
-                let alertController = UIAlertController(title: "Log in failed", message: message, preferredStyle: UIAlertControllerStyle.alert)
+                let alertController = UIAlertController(title: "Log in failed", message: message, preferredStyle: UIAlertController.Style.alert)
                 
                 // Replace UIAlertActionStyle.Default by UIAlertActionStyle.default
-                let okAction = UIAlertAction(title: "OK", style: UIAlertActionStyle.default) {
+                let okAction = UIAlertAction(title: "OK", style: UIAlertAction.Style.default) {
                     (result : UIAlertAction) -> Void in
                     
                 }
@@ -59,10 +59,10 @@ open class LS2ParticipantAccountGeneratorRequestingCredentialsStepViewController
                         self.loggedIn = false
                         let message: String = "An error occurred. Pleas try again."
                         DispatchQueue.main.async {
-                            let alertController = UIAlertController(title: "Log in failed", message: message, preferredStyle: UIAlertControllerStyle.alert)
+                            let alertController = UIAlertController(title: "Log in failed", message: message, preferredStyle: UIAlertController.Style.alert)
                             
                             // Replace UIAlertActionStyle.Default by UIAlertActionStyle.default
-                            let okAction = UIAlertAction(title: "OK", style: UIAlertActionStyle.default) {
+                            let okAction = UIAlertAction(title: "OK", style: UIAlertAction.Style.default) {
                                 (result : UIAlertAction) -> Void in
                                 
                             }
@@ -81,10 +81,10 @@ open class LS2ParticipantAccountGeneratorRequestingCredentialsStepViewController
                 self.isLoading = false
                 let message: String = "Unable to create log in credentials."
                 DispatchQueue.main.async {
-                    let alertController = UIAlertController(title: "Log in failed", message: message, preferredStyle: UIAlertControllerStyle.alert)
+                    let alertController = UIAlertController(title: "Log in failed", message: message, preferredStyle: UIAlertController.Style.alert)
                     
                     // Replace UIAlertActionStyle.Default by UIAlertActionStyle.default
-                    let okAction = UIAlertAction(title: "OK", style: UIAlertActionStyle.default) {
+                    let okAction = UIAlertAction(title: "OK", style: UIAlertAction.Style.default) {
                         (result : UIAlertAction) -> Void in
                         
                     }

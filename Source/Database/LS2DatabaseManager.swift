@@ -166,7 +166,7 @@ open class LS2DatabaseManager: NSObject {
             self.sync()
         }
         
-        self.protectedDataAvaialbleObserver = NotificationCenter.default.addObserver(forName: .UIApplicationProtectedDataDidBecomeAvailable, object: nil, queue: nil) { [weak self](notification) in
+        self.protectedDataAvaialbleObserver = NotificationCenter.default.addObserver(forName: UIApplication.protectedDataDidBecomeAvailableNotification, object: nil, queue: nil) { [weak self](notification) in
             
             guard let strongSelf = self else {
                 return
