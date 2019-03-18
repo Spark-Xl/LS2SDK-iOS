@@ -145,7 +145,19 @@ extension LS2AutoResult: LS2DatapointConvertible {
         let creationDate = self.startDate ?? Date()
         let acquisitionSource = LS2AcquisitionProvenance(sourceName: sourceName, sourceCreationDateTime: creationDate, modality: .SelfReported)
         
-        let header = LS2DatapointHeader(id: self.uuid, schemaID: self.schema, acquisitionProvenance: acquisitionSource, metadata: self.metadata)
+        let metadata: JSON = {
+            let taskRunMetadata: JSON = ["taskRunUUID": self.taskRunUUID.uuidString]
+            if let existingMetadata = self.metadata {
+                return taskRunMetadata.merging(existingMetadata, uniquingKeysWith: { (first, second) -> Any in
+                    return first
+                })
+            }
+            else {
+                return taskRunMetadata
+            }
+        }()
+        
+        let header = LS2DatapointHeader(id: self.uuid, schemaID: self.schema, acquisitionProvenance: acquisitionSource, metadata: metadata)
         return builder.createDatapoint(header: header, body: self.resultDict)
         
     }
