@@ -1,12 +1,15 @@
 use_frameworks!
 platform :ios, '10.0'
 
-target 'LS2SDK_Example' do
-  pod 'LS2SDK', :path => '../'
+source 'https://github.com/ResearchSuite/Specs.git'
+source 'https://github.com/CuriosityHealth/Specs.git'
+source 'https://github.com/CocoaPods/Specs.git'
 
-  pod 'OMHClient', :path => '~/Developer/ResearchSuite/iOS/OMHClient-ios'
-  pod 'ResearchSuiteExtensions', :path => '~/Developer/ResearchSuite/iOS/ResearchSuiteExtensions'
-  pod 'ResearchSuiteResultsProcessor', :git => 'https://github.com/ResearchSuite/ResearchSuiteResultsProcessor-ios', :tag => '0.8.0'
+target 'LS2SDK_Example' do
+  pod 'LS2SDK', :git => 'https://github.com/CuriosityHealth/LS2SDK-iOS'
+  pod 'OMHClient'
+  pod 'ResearchSuiteExtensions', :git => 'https://github.com/ResearchSuite/ResearchSuiteExtensions-iOS'
+  pod 'ResearchSuiteResultsProcessor', :git => 'https://github.com/ResearchSuite/ResearchSuiteResultsProcessor-ios'
 
   target 'LS2SDK_Tests' do
     inherit! :search_paths

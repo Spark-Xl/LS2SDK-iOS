@@ -21,7 +21,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
         
-        self.ls2Manager = LS2Manager(baseURL: "http://localhost:8000/dsu", queueStorageDirectory: "LS2SDK", store: LS2Store())
+        self.ls2Manager = LS2Manager(baseURL: "http://localhost:8000/dsu", queueStorageDirectory: "LS2SDK", store: LS2Store() as! RSCredentialsStore)
         
         return true
     }

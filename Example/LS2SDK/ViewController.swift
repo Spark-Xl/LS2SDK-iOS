@@ -7,7 +7,6 @@
 //
 
 import UIKit
-import LS2SDK
 
 class ViewController: UIViewController {
 
